@@ -1,15 +1,11 @@
 import { Theme, createStyles } from '@material-ui/core';
 import { StyleRules } from '@material-ui/core/styles/withStyles';
 
-const styles = (theme: Theme): StyleRules<string, {}> => createStyles({
+const styles = (theme: Theme): StyleRules<string> => createStyles({
   root: {
-    minHeight: '100vh',
+    width: '100vw',
+    height: '100vh',
     backgroundColor: theme.palette.primary.main,
-  },
-  header: {
-    height: theme.spacing(5),
-    display: 'flex',
-    fontSize: theme.typography.body1.fontSize,
   },
 });
 

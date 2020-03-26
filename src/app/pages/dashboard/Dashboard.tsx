@@ -1,10 +1,16 @@
 import React from 'react';
-import { withStyles } from '@material-ui/core';
+import { withStyles, Box, WithStyles } from '@material-ui/core';
 
 import styles from './Dashboard.styles';
 
-const Dashboard = (): JSX.Element => (
-  <div />
+interface Props extends WithStyles<typeof styles> {
+  countryCode: string;
+}
+
+const Dashboard: React.FC<Props> = ({ classes }: Props) => (
+  <Box component="div" className={classes.root}>
+    Test
+  </Box>
 );
 
 export default withStyles(styles, { withTheme: true })(Dashboard);
