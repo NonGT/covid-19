@@ -16,7 +16,8 @@ import store from './store';
 
 import styles from './App.styles';
 import routes from './routes';
-import ProgressMask from '../components/progressMask/ProgressMask';
+import ProgressMask from '../components/progressMask';
+import NavBar from '../components/navBar';
 
 const Dashboard = lazy(() => import('./pages/dashboard'));
 const About = lazy(() => import('./pages/about'));
@@ -27,6 +28,7 @@ const App: React.FC<Props> = ({ classes }: Props): JSX.Element => (
   <Provider store={store}>
     <MuiThemeProvider theme={material}>
       <ConnectedRouter history={history}>
+        <NavBar />
         <Box component="div" className={classes.root}>
           <Suspense
             fallback={(
