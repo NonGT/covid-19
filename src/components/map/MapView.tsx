@@ -30,8 +30,8 @@ const MapView: React.FC<Props> = ({ location, classes }: Props) => {
     const mapCanvas = mapRef.current;
     const mapView = new HarpMapView({
       canvas: mapCanvas,
-      theme: 'node_modules/@here/harp-map-theme/resources/berlin_tilezen_base.json',
-      decoderUrl: 'harp-gl-decoders.bundle.js',
+      theme: '/map-theme.json',
+      decoderUrl: '/static/js/glDecoder.3fc3c0a3.chunk.js',
     });
 
     mapView.camera.position.set(0, 0, 800);
@@ -44,7 +44,7 @@ const MapView: React.FC<Props> = ({ location, classes }: Props) => {
       styleSetName: 'tilezen',
       authenticationCode: 'II2hORmkhwFAopWVCgz1BejB-UwJsPjBfc8sNZLL3AI',
       authenticationMethod: {
-        method: AuthenticationMethod.AuthorizationHeader,
+        method: AuthenticationMethod.QueryString,
         name: 'apikey',
       },
     });
