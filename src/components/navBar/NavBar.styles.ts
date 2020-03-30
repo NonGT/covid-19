@@ -5,12 +5,13 @@ import {
   duration,
 } from '@material-ui/core';
 
+import Color from 'color';
 import { StyleRules } from '@material-ui/core/styles/withStyles';
 
 const styles = (theme: Theme): StyleRules<string> => createStyles({
   root: {
     backgroundColor: theme.palette.primary.main,
-    transition: theme.transitions.create('transform', {
+    transition: theme.transitions.create('all', {
       duration: duration.complex,
       easing: easing.easeOut,
     }),
@@ -18,6 +19,7 @@ const styles = (theme: Theme): StyleRules<string> => createStyles({
   },
   rootCollapsed: {
     transform: 'translate(0, -50%)',
+    backgroundColor: Color(theme.palette.primary.main).alpha(0.8).toString(),
   },
   title: {
     transition: theme.transitions.create('transform', {
