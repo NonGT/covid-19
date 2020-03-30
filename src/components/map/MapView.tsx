@@ -1,12 +1,12 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, EffectCallback } from 'react';
 import classnames from 'classnames';
 import {
   withStyles,
   WithStyles,
 } from '@material-ui/core';
 
-import { MapView as HarpMapView } from '@here/harp-mapview';
-import { GeoCoordinates as HarpGeoCoordinates } from '@here/harp-geoutils';
+import { MapView as HarpMapView, MapViewEventNames } from '@here/harp-mapview';
+import { GeoCoordinates as HarpGeoCoordinates, sphereProjection } from '@here/harp-geoutils';
 import { OmvDataSource, APIFormat, AuthenticationMethod } from '@here/harp-omv-datasource';
 import { OmvTileDecoderService } from '@here/harp-omv-datasource/index-worker';
 
@@ -24,18 +24,16 @@ const MapView: React.FC<Props> = ({ location, classes }: Props) => {
 
   useEffect(() => {
     if (!mapRef.current) {
-      return;
+      return (): void => {};
     }
 
     const mapCanvas = mapRef.current;
     const mapView = new HarpMapView({
       canvas: mapCanvas,
-      theme: '/map-theme.json',
-      decoderUrl: '/static/js/glDecoder.3fc3c0a3.chunk.js',
+      projection: sphereProjection,
+      theme: '/mapTheme.json',
     });
 
-    mapView.camera.position.set(0, 0, 800);
-    mapView.geoCenter = new HarpGeoCoordinates(40.70398928, -74.01319808, 0);
     mapView.resize(mapCanvas.clientWidth, mapCanvas.clientHeight);
 
     const dataSource = new OmvDataSource({
@@ -48,7 +46,30 @@ const MapView: React.FC<Props> = ({ location, classes }: Props) => {
         name: 'apikey',
       },
     });
+
     mapView.addDataSource(dataSource);
+
+    const initialCoordinates = new HarpGeoCoordinates(15.8700, 100.9925);
+    const initialZoomLevel = 6;
+    mapView.setCameraGeolocationAndZoom(initialCoordinates, initialZoomLevel);
+
+    const onWindowResize = (): void => {
+      mapView.resize(mapCanvas.clientWidth, mapCanvas.clientHeight);
+    };
+    window.addEventListener('resize', onWindowResize);
+
+    const onAfterRender = (): void => {
+      const degree = 0;
+      const heading = (degree + 0.1) % 360;
+      mapView.lookAt(initialCoordinates, 4000000, 45, heading);
+      mapView.update();
+    };
+    mapView.addEventListener(MapViewEventNames.AfterRender, onAfterRender);
+
+    return (): void => {
+      window.removeEventListener('resize', onWindowResize);
+      mapView.removeEventListener(MapViewEventNames.AfterRender, onAfterRender);
+    };
   });
 
   return (
