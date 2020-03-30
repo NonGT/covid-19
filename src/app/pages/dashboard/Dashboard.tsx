@@ -9,7 +9,7 @@ interface Props extends WithStyles<typeof styles> {
 }
 
 const Dashboard: React.FC<Props> = ({ classes }: Props) => (
-  <MapView location={{ latitude: 0, longitude: 0 }} />
+  <MapView location={{ latitude: 10.8700, longitude: 100.9925 }} orbit />
 );
 
 export default withStyles(styles, { withTheme: true })(Dashboard);

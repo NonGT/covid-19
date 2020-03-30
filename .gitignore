@@ -104,4 +104,7 @@ dist
 .tern-port
 
 # Bundles
-./public/*.bundle.js
+public/*.bundle.js
+
+# env
+devenv

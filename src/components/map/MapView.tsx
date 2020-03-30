@@ -1,5 +1,5 @@
-import React, { useRef, useEffect, EffectCallback } from 'react';
-import classnames from 'classnames';
+import React, { useRef, useEffect, useState } from 'react';
+
 import {
   withStyles,
   WithStyles,
@@ -8,72 +8,146 @@ import {
 import { MapView as HarpMapView, MapViewEventNames } from '@here/harp-mapview';
 import { GeoCoordinates as HarpGeoCoordinates, sphereProjection } from '@here/harp-geoutils';
 import { OmvDataSource, APIFormat, AuthenticationMethod } from '@here/harp-omv-datasource';
-import { OmvTileDecoderService } from '@here/harp-omv-datasource/index-worker';
 
 import styles from './MapView.styles';
 import { GeoCoordinates } from '../../core/types/geo';
+import * as config from '../../config';
 
 interface Props extends WithStyles<typeof styles> {
   location: GeoCoordinates;
+  themeUrl?: string;
+  dataSourceUrl?: string;
+  styleSetName?: string;
+  zoomLevel?: number;
+  cameraDistance?: number;
+  heading?: number;
+  tilt?: number;
+  orbit?: boolean;
 }
 
-OmvTileDecoderService.start();
+const DEFAULT_ZOOM_LEVEL = 6;
+const DEFAULT_CAMERA_DISTANCE = 3000000;
+const DEFAULT_TILT = 45;
+const DEFAULT_HEADING = 0;
 
-const MapView: React.FC<Props> = ({ location, classes }: Props) => {
-  const mapRef = useRef<HTMLCanvasElement>(null);
+function createMapView(
+  mapCanvas: HTMLCanvasElement,
+  coordinates: HarpGeoCoordinates,
+  themeUrl?: string,
+  styleSetName?: string,
+  dataSourceUrl?: string,
+  zoomLevel?: number,
+): HarpMapView {
+  const mapView = new HarpMapView({
+    canvas: mapCanvas,
+    projection: sphereProjection,
+    theme: themeUrl || config.map.defaultTheme,
+  });
+
+  mapView.resize(mapCanvas.clientWidth, mapCanvas.clientHeight);
+
+  const dataSource = new OmvDataSource({
+    baseUrl: dataSourceUrl || config.map.dataSourceUrl,
+    apiFormat: APIFormat.XYZOMV,
+    styleSetName: styleSetName || config.map.defaultStyleSet,
+    authenticationCode: config.map.authKey,
+    authenticationMethod: {
+      method: AuthenticationMethod.QueryString,
+      name: config.map.authParamName,
+    },
+  });
+
+  mapView.addDataSource(dataSource);
+
+  mapView.setCameraGeolocationAndZoom(
+    coordinates,
+    zoomLevel || DEFAULT_ZOOM_LEVEL,
+  );
+
+  return mapView;
+}
+
+const MapView: React.FC<Props> = ({
+  classes,
+  location,
+  themeUrl,
+  styleSetName,
+  dataSourceUrl,
+  zoomLevel,
+  cameraDistance,
+  heading,
+  tilt,
+  orbit,
+}: Props) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [currentHeading, setCurrentHeading] = useState(heading);
+  const [currentMapView, setCurrentMapView] = useState<HarpMapView | null>(null);
+
+  const coordinates = new HarpGeoCoordinates(
+    location.latitude,
+    location.longitude,
+  );
 
   useEffect(() => {
-    if (!mapRef.current) {
+    if (!canvasRef.current || currentMapView != null) {
       return (): void => {};
     }
 
-    const mapCanvas = mapRef.current;
-    const mapView = new HarpMapView({
-      canvas: mapCanvas,
-      projection: sphereProjection,
-      theme: '/mapTheme.json',
-    });
+    const mapCanvas = canvasRef.current;
 
-    mapView.resize(mapCanvas.clientWidth, mapCanvas.clientHeight);
+    const mapView = createMapView(
+      mapCanvas,
+      coordinates,
+      themeUrl,
+      styleSetName,
+      dataSourceUrl,
+      zoomLevel,
+    );
 
-    const dataSource = new OmvDataSource({
-      baseUrl: 'https://vector.hereapi.com/v2/vectortiles/base/mc',
-      apiFormat: APIFormat.XYZOMV,
-      styleSetName: 'tilezen',
-      authenticationCode: 'II2hORmkhwFAopWVCgz1BejB-UwJsPjBfc8sNZLL3AI',
-      authenticationMethod: {
-        method: AuthenticationMethod.QueryString,
-        name: 'apikey',
-      },
-    });
-
-    mapView.addDataSource(dataSource);
-
-    const initialCoordinates = new HarpGeoCoordinates(15.8700, 100.9925);
-    const initialZoomLevel = 6;
-    mapView.setCameraGeolocationAndZoom(initialCoordinates, initialZoomLevel);
+    setCurrentMapView(mapView);
 
     const onWindowResize = (): void => {
       mapView.resize(mapCanvas.clientWidth, mapCanvas.clientHeight);
     };
     window.addEventListener('resize', onWindowResize);
 
-    const onAfterRender = (): void => {
-      const degree = 0;
-      const heading = (degree + 0.1) % 360;
-      mapView.lookAt(initialCoordinates, 4000000, 45, heading);
-      mapView.update();
+    return (): void => {
+      window.removeEventListener('resize', onWindowResize);
     };
+  }, [currentMapView, coordinates, themeUrl, styleSetName, dataSourceUrl, zoomLevel]);
+
+  useEffect(() => {
+    if (currentMapView == null) {
+      return (): void => {};
+    }
+
+    const mapView = currentMapView;
+
+    const onAfterRender = (): void => {
+      const headingDegree = currentHeading || DEFAULT_HEADING;
+      const normalizedHeading = headingDegree % 360;
+      mapView.lookAt(
+        coordinates,
+        cameraDistance || DEFAULT_CAMERA_DISTANCE,
+        tilt || DEFAULT_TILT,
+        normalizedHeading,
+      );
+      mapView.update();
+
+      if (orbit) {
+        setCurrentHeading(headingDegree + 0.05);
+      }
+    };
+
     mapView.addEventListener(MapViewEventNames.AfterRender, onAfterRender);
 
     return (): void => {
-      window.removeEventListener('resize', onWindowResize);
       mapView.removeEventListener(MapViewEventNames.AfterRender, onAfterRender);
     };
   });
 
   return (
-    <canvas className={classes.root} ref={mapRef} />
+    <canvas className={classes.root} ref={canvasRef} />
   );
 };
 
