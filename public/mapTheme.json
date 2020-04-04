@@ -66,21 +66,7 @@
   "fontCatalogs": [
 	  {
 		  "name": "fira",
-		  "url": "fonts/Default_FontCatalog.json"
-	  }
-  ],
-  "images": {
-	  "icons_night_maki": {
-		  "url": "maki_icons.png",
-		  "preload": true,
-		  "atlas": "maki_icons.json"
-	  }
-  },
-  "poiTables": [
-	  {
-		  "name": "tzPoiTableMaki",
-		  "url": "poi_table_maki.json",
-		  "useAltNamesForKey": true
+		  "url": "/fonts/defaultFontCatalog.json"
 	  }
   ],
   "styles": {

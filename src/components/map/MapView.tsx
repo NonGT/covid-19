@@ -1,4 +1,9 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, {
+  useRef,
+  useEffect,
+  useState,
+  memo,
+} from 'react';
 
 import {
   withStyles,
@@ -13,30 +18,29 @@ import styles from './MapView.styles';
 import { GeoCoordinates } from '../../core/types/geo';
 import * as config from '../../config';
 
+export interface CameraParams {
+  center: GeoCoordinates;
+  distance?: number;
+  heading?: number;
+  tilt?: number;
+}
+
 interface Props extends WithStyles<typeof styles> {
-  location: GeoCoordinates;
+  camera: CameraParams;
   themeUrl?: string;
   dataSourceUrl?: string;
   styleSetName?: string;
-  zoomLevel?: number;
-  cameraDistance?: number;
-  heading?: number;
-  tilt?: number;
-  orbit?: boolean;
 }
 
-const DEFAULT_ZOOM_LEVEL = 6;
 const DEFAULT_CAMERA_DISTANCE = 3000000;
 const DEFAULT_TILT = 45;
 const DEFAULT_HEADING = 0;
 
 function createMapView(
   mapCanvas: HTMLCanvasElement,
-  coordinates: HarpGeoCoordinates,
   themeUrl?: string,
   styleSetName?: string,
   dataSourceUrl?: string,
-  zoomLevel?: number,
 ): HarpMapView {
   const mapView = new HarpMapView({
     canvas: mapCanvas,
@@ -59,33 +63,49 @@ function createMapView(
 
   mapView.addDataSource(dataSource);
 
-  mapView.setCameraGeolocationAndZoom(
-    coordinates,
-    zoomLevel || DEFAULT_ZOOM_LEVEL,
+  return mapView;
+}
+
+function updateMapViewCamera(mapView: HarpMapView, params: CameraParams): void {
+  const {
+    center,
+    distance,
+    heading,
+    tilt,
+  } = params;
+
+  const headingDegree = heading || DEFAULT_HEADING;
+  const normalizedHeading = headingDegree % 360;
+  const coordinates = new HarpGeoCoordinates(
+    center.latitude,
+    center.longitude,
   );
 
-  return mapView;
+  mapView.lookAt(
+    coordinates,
+    distance || DEFAULT_CAMERA_DISTANCE,
+    tilt || DEFAULT_TILT,
+    normalizedHeading,
+  );
+
+  mapView.update();
 }
 
 const MapView: React.FC<Props> = ({
   classes,
-  location,
+  camera,
   themeUrl,
   styleSetName,
   dataSourceUrl,
-  zoomLevel,
-  cameraDistance,
-  heading,
-  tilt,
-  orbit,
 }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [currentHeading, setCurrentHeading] = useState(heading);
+
   const [currentMapView, setCurrentMapView] = useState<HarpMapView | null>(null);
+  const { center } = camera;
 
   const coordinates = new HarpGeoCoordinates(
-    location.latitude,
-    location.longitude,
+    center.latitude,
+    center.longitude,
   );
 
   useEffect(() => {
@@ -97,11 +117,9 @@ const MapView: React.FC<Props> = ({
 
     const mapView = createMapView(
       mapCanvas,
-      coordinates,
       themeUrl,
       styleSetName,
       dataSourceUrl,
-      zoomLevel,
     );
 
     setCurrentMapView(mapView);
@@ -109,12 +127,12 @@ const MapView: React.FC<Props> = ({
     const onWindowResize = (): void => {
       mapView.resize(mapCanvas.clientWidth, mapCanvas.clientHeight);
     };
-    window.addEventListener('resize', onWindowResize);
 
+    window.addEventListener('resize', onWindowResize);
     return (): void => {
       window.removeEventListener('resize', onWindowResize);
     };
-  }, [currentMapView, coordinates, themeUrl, styleSetName, dataSourceUrl, zoomLevel]);
+  }, [currentMapView, coordinates, themeUrl, styleSetName, dataSourceUrl]);
 
   useEffect(() => {
     if (currentMapView == null) {
@@ -122,25 +140,11 @@ const MapView: React.FC<Props> = ({
     }
 
     const mapView = currentMapView;
-
     const onAfterRender = (): void => {
-      const headingDegree = currentHeading || DEFAULT_HEADING;
-      const normalizedHeading = headingDegree % 360;
-      mapView.lookAt(
-        coordinates,
-        cameraDistance || DEFAULT_CAMERA_DISTANCE,
-        tilt || DEFAULT_TILT,
-        normalizedHeading,
-      );
-      mapView.update();
-
-      if (orbit) {
-        setCurrentHeading(headingDegree + 0.05);
-      }
+      updateMapViewCamera(mapView, camera);
     };
 
     mapView.addEventListener(MapViewEventNames.AfterRender, onAfterRender);
-
     return (): void => {
       mapView.removeEventListener(MapViewEventNames.AfterRender, onAfterRender);
     };
@@ -151,5 +155,4 @@ const MapView: React.FC<Props> = ({
   );
 };
 
-export default withStyles(styles,
-  { withTheme: true })(MapView);
+export default memo(withStyles(styles, { withTheme: true })(MapView));

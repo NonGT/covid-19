@@ -1,4 +1,4 @@
-const defaultMapTheme = '/mapTheme.json';
+const defaultMapTheme = 'https://unpkg.com/@here/harp-map-theme@latest/resources/berlin_tilezen_night_reduced.json';
 const defaultMapDataSource = 'https://vector.hereapi.com/v2/vectortiles/base/mc';
 const defaultStyleSet = 'tilezen';
 const defaultAuthParamName = 'apikey';
