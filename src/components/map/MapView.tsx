@@ -10,9 +10,10 @@ import {
   WithStyles,
 } from '@material-ui/core';
 
-import { MapView as HarpMapView, MapViewEventNames } from '@here/harp-mapview';
+import { MapView as HarpMapView, MapViewEventNames, DataSource } from '@here/harp-mapview';
 import { GeoCoordinates as HarpGeoCoordinates, sphereProjection } from '@here/harp-geoutils';
 import { OmvDataSource, APIFormat, AuthenticationMethod } from '@here/harp-omv-datasource';
+import { FeaturesDataSource } from '@here/harp-features-datasource';
 
 import styles from './MapView.styles';
 import { GeoCoordinates } from '../../core/types/geo';
@@ -28,8 +29,9 @@ export interface CameraParams {
 interface Props extends WithStyles<typeof styles> {
   camera: CameraParams;
   themeUrl?: string;
-  dataSourceUrl?: string;
+  tileDataUrl?: string;
   styleSetName?: string;
+  features?: FeaturesDataSource[];
 }
 
 const DEFAULT_CAMERA_DISTANCE = 3000000;
@@ -40,7 +42,7 @@ function createMapView(
   mapCanvas: HTMLCanvasElement,
   themeUrl?: string,
   styleSetName?: string,
-  dataSourceUrl?: string,
+  tileDataUrl?: string,
 ): HarpMapView {
   const mapView = new HarpMapView({
     canvas: mapCanvas,
@@ -51,7 +53,7 @@ function createMapView(
   mapView.resize(mapCanvas.clientWidth, mapCanvas.clientHeight);
 
   const dataSource = new OmvDataSource({
-    baseUrl: dataSourceUrl || config.map.dataSourceUrl,
+    baseUrl: tileDataUrl || config.map.tileDataUrl,
     apiFormat: APIFormat.XYZOMV,
     styleSetName: styleSetName || config.map.defaultStyleSet,
     authenticationCode: config.map.authKey,
@@ -62,6 +64,7 @@ function createMapView(
   });
 
   mapView.addDataSource(dataSource);
+  mapView.renderLabels = false;
 
   return mapView;
 }
@@ -96,11 +99,17 @@ const MapView: React.FC<Props> = ({
   camera,
   themeUrl,
   styleSetName,
-  dataSourceUrl,
+  tileDataUrl,
+  features,
 }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const [currentMapView, setCurrentMapView] = useState<HarpMapView | null>(null);
+  const [
+    currentFeatures,
+    setCurrentFeatures,
+  ] = useState<FeaturesDataSource[]>();
+
+  const [currentMapView, setCurrentMapView] = useState<HarpMapView>();
   const { center } = camera;
 
   const coordinates = new HarpGeoCoordinates(
@@ -109,7 +118,7 @@ const MapView: React.FC<Props> = ({
   );
 
   useEffect(() => {
-    if (!canvasRef.current || currentMapView != null) {
+    if (!canvasRef.current || !!currentMapView) {
       return (): void => {};
     }
 
@@ -119,7 +128,7 @@ const MapView: React.FC<Props> = ({
       mapCanvas,
       themeUrl,
       styleSetName,
-      dataSourceUrl,
+      tileDataUrl,
     );
 
     setCurrentMapView(mapView);
@@ -132,23 +141,35 @@ const MapView: React.FC<Props> = ({
     return (): void => {
       window.removeEventListener('resize', onWindowResize);
     };
-  }, [currentMapView, coordinates, themeUrl, styleSetName, dataSourceUrl]);
+  }, [currentMapView, coordinates, themeUrl, styleSetName, tileDataUrl]);
 
   useEffect(() => {
-    if (currentMapView == null) {
+    if (!currentMapView) {
       return (): void => {};
     }
 
-    const mapView = currentMapView;
     const onAfterRender = (): void => {
-      updateMapViewCamera(mapView, camera);
+      updateMapViewCamera(currentMapView, camera);
     };
 
-    mapView.addEventListener(MapViewEventNames.AfterRender, onAfterRender);
+    if (currentFeatures) {
+      currentFeatures.forEach((feature) => {
+        // currentMapView.removeDataSource((feature as unknown) as DataSource);
+      });
+    }
+
+    if (features && !currentFeatures) {
+      setCurrentFeatures(features);
+      features.forEach((feature) => {
+        currentMapView.addDataSource((feature as unknown) as DataSource);
+      });
+    }
+
+    currentMapView.addEventListener(MapViewEventNames.AfterRender, onAfterRender);
     return (): void => {
-      mapView.removeEventListener(MapViewEventNames.AfterRender, onAfterRender);
+      currentMapView.removeEventListener(MapViewEventNames.AfterRender, onAfterRender);
     };
-  });
+  }, [currentMapView, camera, features, currentFeatures]);
 
   return (
     <canvas className={classes.root} ref={canvasRef} />

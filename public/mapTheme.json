@@ -2138,6 +2138,28 @@
 			  },
 			  "renderOrder": 100
 		  }
-	  ]
+    ],
+    "boundary": [
+		  {
+			  "description": "boundary_chart",
+			  "when": [
+          "all",
+          ["==", ["geometry-type"], "Polygon"]
+			  ],
+			  "technique": "extruded-polygon",
+			  "attr": {
+				  "color": "#ff0000",
+				  "transparent": true,
+          "opacity": 0.8,
+          "boundaryWalls": false,
+				  "constantHeight": true,
+          "lineWidth": 1,
+          "lineColor": "#003344",
+          "emissive": "#0000ff",
+				  "emissiveIntensity": 0.45
+        },
+			  "renderOrder": 1000
+		  }
+    ]
   }
 }

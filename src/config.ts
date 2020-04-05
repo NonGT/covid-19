@@ -1,5 +1,5 @@
-const defaultMapTheme = 'https://unpkg.com/@here/harp-map-theme@latest/resources/berlin_tilezen_night_reduced.json';
-const defaultMapDataSource = 'https://vector.hereapi.com/v2/vectortiles/base/mc';
+const defaultMapTheme = '/mapTheme.json';
+const defaultTileDataSource = 'https://vector.hereapi.com/v2/vectortiles/base/mc';
 const defaultStyleSet = 'tilezen';
 const defaultAuthParamName = 'apikey';
 
@@ -8,5 +8,5 @@ export const map = {
   authParamName: process.env.REACT_APP_MAP_AUTH_FIELD_NAME || defaultAuthParamName,
   defaultTheme: process.env.REACT_APP_MAP_THEME || defaultMapTheme,
   defaultStyleSet: process.env.REACT_APP_MAP_STYLE_SET || defaultStyleSet,
-  dataSourceUrl: process.env.REACT_APP_MAP_DATA_SOURCE_URL || defaultMapDataSource,
+  tileDataUrl: process.env.REACT_APP_TILE_DATA_SOURCE_URL || defaultTileDataSource,
 };

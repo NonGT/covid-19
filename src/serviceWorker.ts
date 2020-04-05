@@ -34,7 +34,7 @@ function registerValidSW(swUrl: string, config?: Config): void {
       const reg = registration;
       reg.onupdatefound = (): void => {
         const installingWorker = registration.installing;
-        if (installingWorker == null) {
+        if (installingWorker === null) {
           return;
         }
         installingWorker.onstatechange = (): void => {
@@ -82,7 +82,7 @@ function checkValidServiceWorker(swUrl: string, config?: Config): void {
       const contentType = response.headers.get('content-type');
       if (
         response.status === 404
-        || (contentType != null && !contentType.includes('javascript'))
+        || (contentType !== null && !contentType.includes('javascript'))
       ) {
         // No service worker found. Probably a different app. Reload the page.
         navigator.serviceWorker.ready.then((registration) => {
