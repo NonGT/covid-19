@@ -66,7 +66,7 @@
   "fontCatalogs": [
 	  {
 		  "name": "fira",
-		  "url": "/fonts/defaultFontCatalog.json"
+		  "url": "/fonts/mapFonts.json"
 	  }
   ],
   "styles": {

@@ -34,7 +34,7 @@ interface Props extends WithStyles<typeof styles> {
   features?: FeaturesDataSource[];
 }
 
-const DEFAULT_CAMERA_DISTANCE = 3000000;
+const DEFAULT_CAMERA_DISTANCE = 2700000;
 const DEFAULT_TILT = 45;
 const DEFAULT_HEADING = 0;
 
