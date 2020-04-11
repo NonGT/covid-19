@@ -1,7 +1,7 @@
 import { RouterState } from 'connected-react-router';
-import { MainState } from './features/main/types';
+import { ResourcesState } from './features/resources/types';
 
 export interface ApplicationState {
   router: RouterState;
-  main: MainState;
+  resources: ResourcesState;
 }

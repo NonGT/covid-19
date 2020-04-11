@@ -12,7 +12,7 @@ import ProgressMask from '../../../components/progressMask';
 import NavBar from '../../../components/navBar';
 import routes from '../../routes';
 
-import { ResourcesIndex, RequestResourcesIndexFunc } from '../main/types';
+import { ResourcesIndex, RequestResourcesIndexFunc } from '../resources/types';
 import styles from './Root.styles';
 
 const Dashboard = lazy(() => import('../dashboard'));

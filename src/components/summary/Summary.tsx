@@ -8,100 +8,63 @@ import {
 import {
   FeaturesDataSource,
   MapViewFeature,
-  MapViewPolygonFeature,
-  MapViewMultiPolygonFeature,
 } from '@here/harp-features-datasource';
+
+import * as turf from '@turf/turf';
 
 import styles from './Summary.styles';
 import MapView, { CameraParams } from '../map/MapView';
-import { GeoJsonFeature } from '../../core/types/geo';
+import { GeoJsonFeature, GeoCoordinates } from '../../core/types/geo';
+import {
+  createPolygonFeature,
+  extractCoordinates,
+} from '../../core/utils/mapUtils';
 
 interface Props extends WithStyles<typeof styles> {
   countryCode: string;
+  areaFeatures?: GeoJsonFeature[];
 }
 
-const Summary: React.FC<Props> = ({ classes }: Props) => {
+function getCenter(areaFeatures: GeoJsonFeature[]): GeoCoordinates {
+  const allCoordinates = areaFeatures
+    .map(extractCoordinates)
+    .reduce((prev, coordinates) => [
+      ...prev,
+      ...coordinates,
+    ], [])
+    .map((coordinate) => turf.point(coordinate));
+
+  const center = turf.center(turf.featureCollection(allCoordinates));
+  const [latitude, longitude] = center.geometry?.coordinates as number[];
+
+  return {
+    latitude,
+    longitude,
+  };
+}
+
+const Summary: React.FC<Props> = ({ classes, areaFeatures }: Props) => {
   const [currentCamera, setCurrentCamera] = useState<CameraParams>(
     { center: { latitude: 11.8700, longitude: 101.5925 }, tilt: 45 },
   );
 
-  const [currentGeo, setCurrentGeo] = useState();
-  const [features, setFeatures] = useState<FeaturesDataSource[]>();
+  const featureDataSources: FeaturesDataSource[] = [];
+  if (areaFeatures) {
+    const mapViewFeatures = areaFeatures.map((feature) => createPolygonFeature(feature));
 
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     const heading = (currentCamera.heading || 0) % 360;
-  //     const tiltFactor = Math.round(heading / 90) % 2;
-  //     const tilt = (currentCamera.tilt || 0) + (tiltFactor === 0 ? -0.010 : 0.010);
+    const ds = new FeaturesDataSource({
+      name: 'boundary',
+      styleSetName: 'boundary',
+      features: mapViewFeatures.filter((mf): mf is MapViewFeature => !!mf),
+      maxGeometryHeight: 300000,
+    });
 
-  //     setCurrentCamera({
-  //       center: { latitude: 9.8700, longitude: 100.9925 },
-  //       heading: heading + 0.025,
-  //       tilt,
-  //     });
-  //   }, 10);
-
-  //   return (): void => {
-  //     clearInterval(interval);
-  //   };
-  // }, [currentCamera.heading, currentCamera.tilt]);
-
-  useEffect(() => {
-    if (currentGeo) {
-      return;
-    }
-
-    const test = async () => {
-      const response = await fetch('/geojson/tha.geojson');
-      const body = await response.text();
-      const data = JSON.parse(body);
-
-      setCurrentGeo(data);
-
-      const mapViewFeatures: MapViewFeature[] = [];
-
-      data.features.forEach((feature: GeoJsonFeature) => {
-        const { type, coordinates } = feature.geometry;
-
-        if (type === 'Polygon') {
-          const mapViewFeature = new MapViewPolygonFeature(coordinates, {
-            ...feature.properties,
-            totalActiveCases: 500,
-            height: 30000,
-          });
-
-          mapViewFeatures.push(mapViewFeature);
-        }
-
-        if (type === 'MultiPolygon') {
-          const mapViewFeature = new MapViewMultiPolygonFeature(coordinates, {
-            ...feature.properties,
-            totalActiveCases: 500,
-            height: 30000,
-          });
-
-          mapViewFeatures.push(mapViewFeature);
-        }
-      });
-
-      const ds = new FeaturesDataSource({
-        name: 'boundary',
-        styleSetName: 'boundary',
-        features: mapViewFeatures,
-        maxGeometryHeight: 300000,
-      });
-
-      setFeatures([ds]);
-    };
-
-    test();
-  });
+    featureDataSources.push(ds);
+  }
 
   return (
-    <Box
-      className={classes.root}
-    >
-      <MapView camera={currentCamera} features={features} />
+    <Box className={classes.root}>
+      <MapView camera={currentCamera} features={featureDataSources} />
     </Box>
   );
 };

@@ -13,3 +13,8 @@ export interface GeoJsonFeature {
     province: string;
   };
 }
+
+export interface GeoJsonFeatureCollection {
+  type: string;
+  features: GeoJsonFeature[];
+}

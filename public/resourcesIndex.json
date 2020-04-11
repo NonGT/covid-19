@@ -1,9 +1,16 @@
 {
   "TH": {
-    "geojson": {
-      "overview": "./geojson/tha.geojson",
-      "level0": {
-        "bangkok": "./geojson/level0/tha/bangkok.geojson"
+    "geoNodes": {
+      "root": {
+        "url": "./geojson/tha.geojson",
+        "geoNodes": {
+          "bangkok": {
+            "url": "./geojson/level0/tha/bangkok.geojson"
+          },
+          "nonthaburi": {
+            "url": "./geojson/level0/tha/nonthaburi.geojson"
+          }
+        }
       }
     }
   }
