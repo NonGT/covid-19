@@ -12,6 +12,12 @@
           }
         }
       }
-    }
+    },
+    "dataSources": [
+      {
+        "name": "summary",
+        "url": "./datasources/tha/summary.json"
+      }
+    ]
   }
 }

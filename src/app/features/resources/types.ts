@@ -18,9 +18,15 @@ export interface GeoJsonResourceNode {
   };
 }
 
+export interface DataSourceConfigIndex {
+  name: string;
+  url: string;
+}
+
 export interface ResourcesIndex {
   [prop: string]: {
     geoNodes: GeoJsonResourceNode;
+    dataSources: DataSourceConfigIndex[];
   };
 }
 

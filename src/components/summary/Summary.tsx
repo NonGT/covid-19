@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   withStyles,
   WithStyles,
@@ -35,7 +35,7 @@ function getCenter(areaFeatures: GeoJsonFeature[]): GeoCoordinates {
     .map((coordinate) => turf.point(coordinate));
 
   const center = turf.center(turf.featureCollection(allCoordinates));
-  const [latitude, longitude] = center.geometry?.coordinates as number[];
+  const [longitude, latitude] = center.geometry?.coordinates as number[];
 
   return {
     latitude,
@@ -44,13 +44,18 @@ function getCenter(areaFeatures: GeoJsonFeature[]): GeoCoordinates {
 }
 
 const Summary: React.FC<Props> = ({ classes, areaFeatures }: Props) => {
-  const [currentCamera, setCurrentCamera] = useState<CameraParams>(
-    { center: { latitude: 11.8700, longitude: 101.5925 }, tilt: 45 },
-  );
+  const currentCamera: CameraParams = {
+    center: {
+      latitude: 11.8700,
+      longitude: 101.5925,
+    },
+    tilt: 45,
+  };
 
   const featureDataSources: FeaturesDataSource[] = [];
   if (areaFeatures) {
     const mapViewFeatures = areaFeatures.map((feature) => createPolygonFeature(feature));
+    currentCamera.center = getCenter(areaFeatures);
 
     const ds = new FeaturesDataSource({
       name: 'boundary',

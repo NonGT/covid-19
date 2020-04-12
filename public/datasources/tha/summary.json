@@ -1,0 +1,84 @@
+{
+  "name": "summary",
+  "method": "GET",
+  "url": "https://opendata.data.go.th/api/3/action/datastore_search",
+  "httpMapping": {
+    "searchParams": [
+      {
+        "target": "resource_id",
+        "default": "93f74e67-6f76-4b25-8f5d-b485083100b6"
+      },
+      {
+        "target": "limit",
+        "sources": [
+          "limit"
+        ]
+      },
+      {
+        "target": "offset",
+        "sources": [
+          "offset"
+        ]
+      }
+    ],
+    "response": [
+      {
+        "name": "cases",
+        "mapping": {
+          "path": "result.records",
+          "type": "array",
+          "members": [
+            {
+              "name": "number",
+              "mapping": {
+                "path": "no"
+              }
+            },
+            {
+              "name": "age",
+              "mapping": {
+                "path": "age"
+              }
+            },
+            {
+              "name": "gender",
+              "mapping": {
+                "path": "sex"
+              }
+            },
+            {
+              "name": "nationality",
+              "mapping": {
+                "path": "nationality"
+              }
+            },
+            {
+              "name": "isolationArea",
+              "mapping": {
+                "path": "Province of isolation"
+              }
+            },
+            {
+              "name": "caseArea",
+              "mapping": {
+                "path": "Province of onset"
+              }
+            },
+            {
+              "name": "announceDate",
+              "mapping": {
+                "path": "Announce Date"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "total",
+        "mapping": {
+          "path": "total"
+        }
+      }
+    ]
+  }
+}
