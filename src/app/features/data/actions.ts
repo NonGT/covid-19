@@ -3,10 +3,15 @@ import {
   RequestDataSourceConfigAction,
   SetDataSourceConfigAction,
   SetDataSourceConfigArgs,
+  RequestDataSourceConfigArgs,
+  RequestDataArgs,
+  RequestDataAction,
+  SetDataArgs,
+  SetDataAction,
 } from './types';
 
 export function requestDataSourceConfig(
-  args: RequestDataSourceConfigAction,
+  args: RequestDataSourceConfigArgs,
 ): RequestDataSourceConfigAction {
   return {
     type: DataActionConstants.DATA_SOURCE_CONFIG_REQUEST,
@@ -19,6 +24,20 @@ export function setDataSourceConfig(
 ): SetDataSourceConfigAction {
   return {
     type: DataActionConstants.DATA_SOURCE_CONFIG_SET,
+    ...args,
+  };
+}
+
+export function requestData(args: RequestDataArgs): RequestDataAction {
+  return {
+    type: DataActionConstants.DATA_REQUEST,
+    ...args,
+  };
+}
+
+export function setData(args: SetDataArgs): SetDataAction {
+  return {
+    type: DataActionConstants.DATA_SET,
     ...args,
   };
 }

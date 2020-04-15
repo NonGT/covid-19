@@ -31,13 +31,15 @@
             {
               "name": "number",
               "mapping": {
-                "path": "no"
+                "path": "no",
+                "type": "number"
               }
             },
             {
               "name": "age",
               "mapping": {
-                "path": "age"
+                "path": "age",
+                "type": "number"
               }
             },
             {
@@ -76,7 +78,8 @@
       {
         "name": "total",
         "mapping": {
-          "path": "total"
+          "path": "total",
+          "type": "number"
         }
       }
     ]

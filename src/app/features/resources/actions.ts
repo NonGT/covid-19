@@ -7,6 +7,8 @@ import {
   RequestGeoJsonAction,
   SetGeoJsonArgs,
   SetGeoJsonAction,
+  SetCountryCodeArgs,
+  SetCountryCodeAction,
 } from './types';
 
 export function requestResourcesIndex(): RequestResourcesIndexAction {
@@ -32,6 +34,13 @@ export function requestGeoJson(args: RequestGeoJsonArgs): RequestGeoJsonAction {
 export function setGeoJson(args: SetGeoJsonArgs): SetGeoJsonAction {
   return {
     type: ResourcesActionConstants.GEOJSON_SET,
+    ...args,
+  };
+}
+
+export function setCountryCode(args: SetCountryCodeArgs): SetCountryCodeAction {
+  return {
+    type: ResourcesActionConstants.COUNTRY_CODE_SET,
     ...args,
   };
 }

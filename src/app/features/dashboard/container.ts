@@ -2,6 +2,7 @@ import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 import { ApplicationState } from '../../types';
 import { requestResourcesIndex, requestGeoJson } from '../resources/actions';
+import { DataState } from '../data/types';
 import {
   ResourcesState,
   RequestResourcesIndexFunc,
@@ -10,9 +11,14 @@ import {
 
 import Dashboard from './Dashboard';
 
-function mapStateToProps(state: ApplicationState): ResourcesState {
+function mapStateToProps(state: ApplicationState): ResourcesState & DataState {
   return ({
     ...state.resources,
+    ...state.data,
+    networkStates: {
+      ...state.resources.networkStates,
+      ...state.data.networkStates,
+    },
   });
 }
 

@@ -19,7 +19,7 @@ export interface GeoJsonResourceNode {
 }
 
 export interface DataSourceConfigIndex {
-  name: string;
+  key: string;
   url: string;
 }
 

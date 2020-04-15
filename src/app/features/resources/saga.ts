@@ -13,12 +13,14 @@ import {
 import get from '../../../core/apiService';
 import { GeneratorEffect } from '../../../core/types/saga';
 import { GeoJsonFeatureCollection } from '../../../core/types/geo';
-import { setResourcesIndex, setGeoJson } from './actions';
+import { setResourcesIndex, setGeoJson, setCountryCode } from './actions';
 import {
   ResourcesActionConstants,
   ResourcesIndex,
   RequestGeoJsonAction,
+  SetResourcesIndexAction,
 } from './types';
+import { getDefaultCountryCode } from './utils';
 
 function* getResourcesIndex(): GeneratorEffect<ResourcesIndex, void> {
   try {
@@ -34,8 +36,14 @@ function* resourcesIndexFlow(): Generator<Effect | Task, void, Effect | Task> {
     yield take(ResourcesActionConstants.RESOURCES_INDEX_REQUEST);
     const task = yield fork(getResourcesIndex);
 
-    yield take(ResourcesActionConstants.RESOURCES_INDEX_SET);
+    const action: unknown = yield take(ResourcesActionConstants.RESOURCES_INDEX_SET);
     yield cancel(task as Task);
+
+    const { resourcesIndex, error } = (action as SetResourcesIndexAction);
+    if (!error && resourcesIndex) {
+      const countryCode = getDefaultCountryCode(resourcesIndex);
+      yield put(setCountryCode({ countryCode }));
+    }
   }
 }
 

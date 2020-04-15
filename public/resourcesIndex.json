@@ -15,7 +15,7 @@
     },
     "dataSources": [
       {
-        "name": "summary",
+        "key": "summary",
         "url": "./datasources/tha/summary.json"
       }
     ]

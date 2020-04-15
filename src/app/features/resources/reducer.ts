@@ -46,9 +46,6 @@ export default function resourcesReducer(
           },
         },
         resourcesIndex: act.resourcesIndex,
-        countryCode: (act.resourcesIndex
-          && Object.keys(act.resourcesIndex).length
-        ) ? Object.keys(act.resourcesIndex)[0] : undefined,
       };
     }
     case ResourcesActionConstants.GEOJSON_REQUEST:
