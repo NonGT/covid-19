@@ -2,6 +2,7 @@ import { Action } from 'redux';
 import NetworkState from '../../../core/types/network';
 import { GeoJsonFeatureCollection } from '../../../core/types/geo';
 import { KeyMap } from '../../../core/types/common';
+import { DataDictEntryConfig } from '../data/types';
 
 export enum ResourcesActionConstants {
   RESOURCES_INDEX_REQUEST = '@@resources/RESOURCES_INDEX_REQUEST',
@@ -23,10 +24,17 @@ export interface DataSourceConfigIndex {
   url: string;
 }
 
+export interface DataDictConfigIndex {
+  key: string;
+  url: string;
+  entries: DataDictEntryConfig[];
+}
+
 export interface ResourcesIndex {
   [prop: string]: {
     geoNodes: GeoJsonResourceNode;
     dataSources: DataSourceConfigIndex[];
+    dataDicts: DataDictConfigIndex[];
   };
 }
 

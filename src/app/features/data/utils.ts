@@ -7,7 +7,17 @@ import {
   DataMapping,
 } from './types';
 
-function applyConverterFuncs(value: unknown, func: DataConverterFunctionDef): unknown {
+function applyConverterFuncs(value: unknown, def: DataConverterFunctionDef): unknown {
+  if (def.func === 'split') {
+    const splitter = !!def.parameters && !!def.parameters.length ? def.parameters[0] : '';
+    return String(value).split(splitter).map((s) => s.trim());
+  }
+
+  if (def.func === 'join') {
+    const splitter = !!def.parameters && !!def.parameters.length ? def.parameters[0] : '';
+    return (value as string[]).join(splitter);
+  }
+
   return value;
 }
 

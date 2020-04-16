@@ -7,7 +7,7 @@ import NetworkState from '../../../core/types/network';
 import { GeoJsonFeatureCollection } from '../../../core/types/geo';
 import { ResourcesIndex, RequestGeoJsonFunc, RequestResourcesIndexFunc } from '../resources/types';
 import { getDefaultCountryCode } from '../resources/utils';
-import { RequestDataSourceConfigFunc, DataSourceConfig } from '../data/types';
+import { RequestDataSourceConfigsFunc, DataSourceConfig } from '../data/types';
 import styles from './Dashboard.styles';
 
 interface Props extends WithStyles<typeof styles> {
@@ -21,7 +21,7 @@ interface Props extends WithStyles<typeof styles> {
   dataSourceConfigs?: KeyMap<string, DataSourceConfig>;
   requestGeoJson: RequestGeoJsonFunc;
   requestResourcesIndex: RequestResourcesIndexFunc;
-  requestDataSourceConfig: RequestDataSourceConfigFunc;
+  requestDataSourceConfig: RequestDataSourceConfigsFunc;
 }
 
 const Dashboard: React.FC<Props> = ({

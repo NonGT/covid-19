@@ -18,6 +18,29 @@
         "key": "summary",
         "url": "./datasources/tha/summary.json"
       }
+    ],
+    "dataDicts": [
+      {
+        "key": "common",
+        "url": "./datasources/tha/dicts/common.json",
+        "entries": [
+          {
+            "dataKey": "genders",
+            "keyMembers": ["en", "th"],
+            "valueMember": "en"
+          },
+          {
+            "dataKey": "nationalities",
+            "keyMembers": ["en", "th"],
+            "valueMember": "en"
+          },
+          {
+            "dataKey": "provinces",
+            "keyMembers": ["en", "th", "thAbbrev"],
+            "valueMember": "en"
+          }
+        ]
+      }
     ]
   }
 }

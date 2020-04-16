@@ -67,6 +67,12 @@
               }
             },
             {
+              "name": "caseSubArea",
+              "mapping": {
+                "path": "District of onset"
+              }
+            },
+            {
               "name": "announceDate",
               "mapping": {
                 "path": "Announce Date"

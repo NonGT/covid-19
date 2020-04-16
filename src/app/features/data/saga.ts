@@ -14,14 +14,24 @@ import {
 import get from '../../../core/apiService';
 import { GeneratorEffect } from '../../../core/types/saga';
 import { ResourcesActionConstants, SetCountryCodeAction, ResourcesIndex } from '../resources/types';
-import { requestDataSourceConfig, setDataSourceConfig, setData } from './actions';
+import {
+  requestDataSourceConfig,
+  setDataSourceConfig,
+  setData,
+  setDataDicts,
+  requestDataDicts,
+} from './actions';
+
 import {
   DataSourceConfig,
   DataActionConstants,
-  RequestDataSourceConfigAction,
+  RequestDataSourceConfigsAction,
   RequestDataAction,
   DataSourceHttpMapping,
+  RequestDataDictsAction,
+  DataDictEntryConfig,
 } from './types';
+
 import { ApplicationState } from '../../types';
 import { KeyMap } from '../../../core/types/common';
 import { getMappedSearchParams, getMappedResponseData } from './utils';
@@ -37,11 +47,50 @@ function* getDataSourceConfig(key: string, url: string): GeneratorEffect<DataSou
 
 function* dataSourceConfigFlow(): Generator<Effect | Task, void, Effect | Task> {
   while (true) {
-    const action: unknown = yield take(DataActionConstants.DATA_SOURCE_CONFIG_REQUEST);
-    const { key, url } = action as RequestDataSourceConfigAction;
+    const action: unknown = yield take(DataActionConstants.DATA_SOURCE_CONFIGS_REQUEST);
+    const { key, url } = action as RequestDataSourceConfigsAction;
     const task = yield fork(getDataSourceConfig, key, url);
 
-    yield take(DataActionConstants.DATA_SOURCE_CONFIG_SET);
+    yield take(DataActionConstants.DATA_SOURCE_CONFIGS_SET);
+    yield cancel(task as Task);
+  }
+}
+
+function* getDataDicts(
+  key: string,
+  url: string,
+  entries: DataDictEntryConfig[],
+): GeneratorEffect<unknown, void> {
+  try {
+    const records = (yield call(get, url)) as Record<string, []>;
+    const dataDicts = entries.reduce((
+      dictGroup,
+      { dataKey, keyMembers, valueMember },
+    ) => ({
+      ...dictGroup,
+      [dataKey]: keyMembers.reduce((keyMemberLookup, keyMember) => ({
+        ...keyMemberLookup,
+        [keyMember]: records[dataKey].reduce((dictLookup, item) => ({
+          ...(dictLookup as object),
+          [(item as Record<string, string>)[keyMember]]:
+            (item as Record<string, string>)[valueMember],
+        }), {}),
+      }), {}),
+    }), {});
+
+    yield put(setDataDicts({ key, dataDicts }));
+  } catch (error) {
+    yield put(setDataDicts({ key, error }));
+  }
+}
+
+function* dataDictsFlow(): Generator<Effect | Task, void, Effect | Task> {
+  while (true) {
+    const action: unknown = yield take(DataActionConstants.DATA_DICTS_REQUEST);
+    const { key, url, entries } = action as RequestDataDictsAction;
+    const task = yield fork(getDataDicts, key, url, entries);
+
+    yield take(DataActionConstants.DATA_DICTS_SET);
     yield cancel(task as Task);
   }
 }
@@ -95,11 +144,17 @@ function* countryCodeUpdatedFlow(): Generator<Effect | Task, void, Effect | Task
     );
 
     const resourcesIndex = effectResult as ResourcesIndex;
-    const { dataSources } = resourcesIndex[countryCode] || {};
+    const { dataSources, dataDicts } = resourcesIndex[countryCode] || {};
 
     yield all(
       dataSources.map(
         ({ key, url }) => put(requestDataSourceConfig({ key, url })),
+      ),
+    );
+
+    yield all(
+      dataDicts.map(
+        ({ key, url, entries }) => put(requestDataDicts({ key, url, entries })),
       ),
     );
   }
@@ -115,6 +170,7 @@ export default function* dataSaga(): Generator<AllEffect<unknown>, void, unknown
   yield all([
     resourcesDependencySaga(),
     dataSourceConfigFlow(),
+    dataDictsFlow(),
     dataFlow(),
   ]);
 }

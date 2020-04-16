@@ -3,8 +3,10 @@ import NetworkState from '../../../core/types/network';
 import { KeyMap } from '../../../core/types/common';
 
 export enum DataActionConstants {
-  DATA_SOURCE_CONFIG_REQUEST = '@@data/DATA_SOURCE_CONFIG_REQUEST',
-  DATA_SOURCE_CONFIG_SET = '@@resources/DATA_SOURCE_CONFIG_SET',
+  DATA_SOURCE_CONFIGS_REQUEST = '@@data/DATA_SOURCE_CONFIGS_REQUEST',
+  DATA_SOURCE_CONFIGS_SET = '@@resources/DATA_SOURCE_CONFIGS_SET',
+  DATA_DICTS_REQUEST = '@@data/DATA_DICTS_REQUEST',
+  DATA_DICTS_SET = '@@data/DATA_DICTS_SET',
   DATA_REQUEST = '@@data/DATA_REQUEST',
   DATA_SET = '@@data/DATA_SET',
 }
@@ -19,7 +21,7 @@ export interface DataConverter {
   functionChains: DataConverterFunctionDef[];
 }
 
-export interface ObjectMemberMapping {
+export interface DataMemberMapping {
   name: string;
   mapping: DataMapping;
 }
@@ -29,7 +31,7 @@ export interface DataMapping {
   type: 'number' | 'string' | 'boolean' | 'array' | 'object';
   index?: number;
   converters?: DataConverter[];
-  members?: ObjectMemberMapping[];
+  members?: DataMemberMapping[];
 }
 
 export interface SearchParamsMapping {
@@ -42,7 +44,11 @@ export interface SearchParamsMapping {
 
 export interface DataSourceHttpMapping {
   searchParams?: SearchParamsMapping[];
-  response?: ObjectMemberMapping[];
+  response?: DataMemberMapping[];
+}
+
+export interface DataDict {
+  [keyMember: string]: KeyMap<string, string>;
 }
 
 export interface DataSourceConfig {
@@ -52,14 +58,32 @@ export interface DataSourceConfig {
   httpMapping: DataSourceHttpMapping;
 }
 
-export interface RequestDataSourceConfigArgs {
+export interface DataDictEntryConfig {
+  dataKey: string;
+  keyMembers: string[];
+  valueMember: string;
+}
+
+export interface RequestDataSourceConfigsArgs {
   key: string;
   url: string;
 }
 
-export interface SetDataSourceConfigArgs {
+export interface SetDataSourceConfigsArgs {
   key: string;
   dataSourceConfig?: DataSourceConfig;
+  error?: Error;
+}
+
+export interface RequestDataDictsArgs {
+  key: string;
+  url: string;
+  entries: DataDictEntryConfig[];
+}
+
+export interface SetDataDictsArgs {
+  key: string;
+  dataDicts?: KeyMap<string, KeyMap<string, string>>;
   error?: Error;
 }
 
@@ -75,7 +99,7 @@ export interface SetDataArgs {
   error?: Error;
 }
 
-export interface SummaryDataSource {
+export interface SummaryData {
   cases: [{
     number?: number;
     age?: number;
@@ -83,28 +107,40 @@ export interface SummaryDataSource {
     nationality?: string;
     isolationArea?: string;
     caseArea?: string;
+    caseSubArea?: string;
     announceDate?: Date;
   }];
   total: number;
 }
 
-export type RequestDataSourceConfigAction =
-  RequestDataSourceConfigArgs & Action<DataActionConstants>;
-export type SetDataSourceConfigAction =
-  SetDataSourceConfigArgs & Action<DataActionConstants>;
+export type RequestDataSourceConfigsAction =
+  RequestDataSourceConfigsArgs & Action<DataActionConstants>;
+export type SetDataSourceConfigsAction =
+  SetDataSourceConfigsArgs & Action<DataActionConstants>;
+export type RequestDataDictsAction = RequestDataDictsArgs & Action<DataActionConstants>;
+export type SetDataDictsAction = SetDataDictsArgs & Action<DataActionConstants>;
 export type RequestDataAction = RequestDataArgs & Action<DataActionConstants>;
-export type SetDataAction =
-  SetDataArgs & Action<DataActionConstants>;
+export type SetDataAction = SetDataArgs & Action<DataActionConstants>;
 
-export type RequestDataSourceConfigFunc =
-  (args: RequestDataSourceConfigArgs) => RequestDataSourceConfigAction;
+export type RequestDataSourceConfigsFunc =
+  (args: RequestDataSourceConfigsArgs) => RequestDataSourceConfigsAction;
+
+export type SetDataSourceConfigsFunc =
+  (args: SetDataSourceConfigsArgs) => SetDataSourceConfigsAction;
+
+export type RequestDataDictsFunc = (args: RequestDataDictsArgs) => RequestDataDictsAction;
+export type SetDataDictsFunc = (args: SetDataDictsArgs) => SetDataDictsAction;
+export type RequestDataFunc = (args: RequestDataArgs) => RequestDataAction;
+export type SetDataFunc = (args: SetDataArgs) => SetDataAction;
 
 export interface DataState {
   networkStates: {
     dataSourceConfigs: NetworkState;
+    dataDicts: NetworkState;
   };
   dataSourceConfigs?: KeyMap<string, DataSourceConfig>;
   data?: {
-    summary?: SummaryDataSource;
+    summary?: SummaryData;
   };
+  dataDicts?: KeyMap<string, DataDict>;
 }
