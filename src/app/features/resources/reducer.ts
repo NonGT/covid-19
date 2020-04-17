@@ -5,6 +5,7 @@ import {
   SetResourcesIndexAction,
   ResourcesState,
   SetGeoJsonAction,
+  SetCountryCodeAction,
 } from './types';
 
 export const initialState: ResourcesState = {
@@ -74,6 +75,13 @@ export default function resourcesReducer(
           ...(state.geoJsons && state.geoJsons),
           [act.key]: act.geoJson,
         } : state.geoJsons,
+      };
+    }
+    case ResourcesActionConstants.COUNTRY_CODE_SET: {
+      const act = (action as SetCountryCodeAction);
+      return {
+        ...state,
+        countryCode: act.countryCode,
       };
     }
     default:

@@ -2,10 +2,14 @@ import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 import { ApplicationState } from '../../types';
 import { requestResourcesIndex, requestGeoJson } from '../resources/actions';
-import { DataState } from '../data/types';
+import { requestData } from '../data/actions';
+import {
+  DataState,
+  RequestDataFunc,
+} from '../data/types';
+
 import {
   ResourcesState,
-  RequestResourcesIndexFunc,
   RequestGeoJsonFunc,
 } from '../resources/types';
 
@@ -23,13 +27,14 @@ function mapStateToProps(state: ApplicationState): ResourcesState & DataState {
 }
 
 type MapDispatchFuncs = {
-  requestResourcesIndex: RequestResourcesIndexFunc;
   requestGeoJson: RequestGeoJsonFunc;
+  requestData: RequestDataFunc;
 };
 const mapDispatchToProps = (dispatch: Dispatch): MapDispatchFuncs => bindActionCreators(
   {
     requestResourcesIndex,
     requestGeoJson,
+    requestData,
   },
   dispatch,
 );

@@ -12,13 +12,8 @@ export enum DataActionConstants {
 }
 
 export interface DataConverterFunctionDef {
-  func: 'split' | 'join' | 'map';
-  parameters?: string[];
-}
-
-export interface DataConverter {
-  input?: string;
-  functionChains: DataConverterFunctionDef[];
+  func: 'split' | 'join' | 'dict';
+  params?: string[];
 }
 
 export interface DataMemberMapping {
@@ -30,30 +25,31 @@ export interface DataMapping {
   path: string;
   type: 'number' | 'string' | 'boolean' | 'array' | 'object';
   index?: number;
-  converters?: DataConverter[];
+  converters?: DataConverterFunctionDef[];
   members?: DataMemberMapping[];
 }
 
-export interface SearchParamsMapping {
+export interface SearchParamMapping {
   target: string;
   sources?: string[];
   format?: string;
   default?: string;
-  converters?: DataConverter[];
+  converters?: DataConverterFunctionDef[];
 }
 
 export interface DataSourceHttpMapping {
-  searchParams?: SearchParamsMapping[];
+  searchParams?: SearchParamMapping[];
   response?: DataMemberMapping[];
 }
 
 export interface DataDict {
-  [keyMember: string]: KeyMap<string, string>;
+  [keyMember: string]: KeyMap<string, unknown>;
 }
 
 export interface DataSourceConfig {
   name: string;
   method: string;
+  mode?: 'cors' | 'navigate' | 'no-cors' | 'same-origin' | undefined;
   url: string;
   httpMapping: DataSourceHttpMapping;
 }
@@ -61,7 +57,7 @@ export interface DataSourceConfig {
 export interface DataDictEntryConfig {
   dataKey: string;
   keyMembers: string[];
-  valueMember: string;
+  valueMember?: string;
 }
 
 export interface RequestDataSourceConfigsArgs {
@@ -89,7 +85,6 @@ export interface SetDataDictsArgs {
 
 export interface RequestDataArgs {
   key: string;
-  url: string;
   params?: KeyMap<string, string>;
 }
 
@@ -137,6 +132,7 @@ export interface DataState {
   networkStates: {
     dataSourceConfigs: NetworkState;
     dataDicts: NetworkState;
+    data: NetworkState;
   };
   dataSourceConfigs?: KeyMap<string, DataSourceConfig>;
   data?: {

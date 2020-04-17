@@ -1,59 +1,93 @@
-import { query } from 'jsonpath';
+import jsonpath from 'jsonpath';
 import { KeyMap } from '../../../core/types/common';
 import {
   DataSourceHttpMapping,
-  SearchParamsMapping,
+  SearchParamMapping,
   DataConverterFunctionDef,
   DataMapping,
+  DataDict,
 } from './types';
 
-function applyConverterFuncs(value: unknown, def: DataConverterFunctionDef): unknown {
-  if (def.func === 'split') {
-    const splitter = !!def.parameters && !!def.parameters.length ? def.parameters[0] : '';
-    return String(value).split(splitter).map((s) => s.trim());
+import * as converterFuncs from './converters';
+import { ConverterFuncs } from './converters/types';
+
+function applyConverterFuncs(
+  value: unknown,
+  def: DataConverterFunctionDef,
+  dataDicts?: Record<string, DataDict>,
+): unknown {
+  const funcs = converterFuncs as ConverterFuncs;
+  return funcs[def.func](value, def.params, dataDicts);
+}
+
+function processConvertion(
+  value: unknown,
+  converters: DataConverterFunctionDef[],
+  dataDicts?: Record<string, DataDict>,
+): unknown {
+  const converted: unknown[] = [value];
+  converters.forEach((converter) => {
+    const convertedStr = applyConverterFuncs(
+      converted[converted.length - 1],
+      converter,
+      dataDicts,
+    );
+
+    converted.push(convertedStr);
+  });
+
+  return converted[converted.length - 1];
+}
+
+function isPrimitiveType(type: string): boolean {
+  return ['boolean', 'number', 'string'].includes(type);
+}
+
+function primitiveConvert(value: unknown, type: string): unknown {
+  if (type === 'boolean') {
+    return Boolean(value);
   }
 
-  if (def.func === 'join') {
-    const splitter = !!def.parameters && !!def.parameters.length ? def.parameters[0] : '';
-    return (value as string[]).join(splitter);
+  if (type === 'number') {
+    return Number(value);
+  }
+
+  if (type === 'string') {
+    return String(value);
   }
 
   return value;
 }
 
-function recursiveMap(data: unknown, mapping: DataMapping): unknown {
-  const member = query(data, `$.${mapping.path}`);
-  if (mapping.type === 'boolean') {
-    return Boolean(member);
-  }
+function refineMappingPath(path: string): string {
+  return path
+    .split('.')
+    .map((str) => (str.includes(' ') ? `['${str}']` : `.${str}`))
+    .join('');
+}
 
-  if (mapping.type === 'number') {
-    return Number(member);
-  }
+function recursiveMap(
+  data: unknown,
+  mapping: DataMapping,
+  dataDicts?: Record<string, DataDict>,
+): unknown {
+  const member = jsonpath.value(data, `$${refineMappingPath(mapping.path)}`);
 
-  if (mapping.type === 'string') {
-    const str = String(member);
+  if (!mapping.type || isPrimitiveType(mapping.type)) {
+    const value = primitiveConvert(member, mapping.type);
+
     const { converters } = mapping;
     if (converters) {
-      converters.forEach((converter) => {
-        const { functionChains } = converter;
-        const converted: unknown[] = [str];
-        functionChains.forEach((funcChain) => {
-          const convertedStr = applyConverterFuncs(converted[converted.length - 1], funcChain);
-          converted.push(convertedStr);
-        });
-
-        return converted[converted.length - 1];
-      });
+      return processConvertion(value, converters, dataDicts);
     }
 
-    return str;
+    return value;
   }
 
   if (mapping.type === 'object' && mapping.members) {
     return mapping.members.reduce((record, innerMember) => ({
       ...record,
-      [innerMember.name]: recursiveMap(data, innerMember.mapping),
+      [innerMember.name]: recursiveMap(data, innerMember.mapping, dataDicts),
     }), {});
   }
 
@@ -62,7 +96,7 @@ function recursiveMap(data: unknown, mapping: DataMapping): unknown {
     const mappedArray = mapping.members
       ? arrayItems.map((item) => mapping.members?.reduce((record, innerMember) => ({
         ...record,
-        [innerMember.name]: recursiveMap(item, innerMember.mapping),
+        [innerMember.name]: recursiveMap(item, innerMember.mapping, dataDicts),
       }), {}))
       : arrayItems;
 
@@ -77,8 +111,9 @@ function recursiveMap(data: unknown, mapping: DataMapping): unknown {
 }
 
 export function mapSearchValue(
-  params: KeyMap<string, string>,
-  mapping: SearchParamsMapping,
+  mapping: SearchParamMapping,
+  params?: KeyMap<string, string>,
+  dataDicts?: Record<string, DataDict>,
 ): string | undefined {
   if (!mapping.sources) {
     return mapping.default;
@@ -87,46 +122,52 @@ export function mapSearchValue(
   const { sources, converters } = mapping;
   const vars: KeyMap<string, string> = sources.reduce((lookup, key) => ({
     ...lookup,
-    [key]: !!params[key] && params[key],
+    [key]: !!params && !!params[key] ? params[key] : undefined,
   }), {});
 
-  if (Object.keys(vars).length < sources.length) {
-    return undefined;
-  }
-
   if (converters) {
-    converters.forEach((converter) => {
-      if (!converter.input || !vars[converter.input]) {
-        return;
-      }
-
-      const key = converter.input;
-      const { functionChains } = converter;
-      const converted: unknown[] = [vars[key]];
-      functionChains.forEach((funcChain) => {
-        const data = applyConverterFuncs(converted[converted.length - 1], funcChain);
-        converted.push(data);
-      });
-
-      vars[key] = converted[converted.length - 1] as string;
+    Object.keys(vars).forEach((key) => {
+      vars[key] = processConvertion(vars[key], converters, dataDicts) as string;
     });
   }
 
-  return sources.map((key: string) => params[key]).join('');
+  if (mapping.format) {
+    return Object.keys(vars).reduce(
+      (replaced, key) => replaced.replace(`${key}`, vars[key]),
+      mapping.format,
+    );
+  }
+
+  const mappedValues = sources
+    .filter((key: string) => vars[key])
+    .map((key: string) => vars[key]);
+
+  if (mappedValues.length === 0) {
+    return undefined;
+  }
+
+  return mappedValues.join(',');
 }
 
 export function getMappedSearchParams(
-  params: KeyMap<string, string>,
   httpMapping: DataSourceHttpMapping,
+  params?: KeyMap<string, string>,
+  dataDicts?: Record<string, DataDict>,
 ): URLSearchParams {
   if (!httpMapping.searchParams) {
     return new URLSearchParams(params);
   }
 
-  const searchParams = httpMapping.searchParams.reduce((searchData, mapping) => ({
-    ...searchData,
-    [mapping.target]: mapSearchValue(params, mapping),
-  }), {});
+  const searchParams = httpMapping.searchParams
+    .map((mapping) => ({
+      target: mapping.target,
+      value: mapSearchValue(mapping, params, dataDicts),
+    }))
+    .filter((mapped) => mapped.value)
+    .reduce((searchData, mapped) => ({
+      ...searchData,
+      [mapped.target]: mapped.value,
+    }), {});
 
   return new URLSearchParams(searchParams);
 }
@@ -134,6 +175,7 @@ export function getMappedSearchParams(
 export function getMappedResponseData(
   data: unknown,
   httpMapping: DataSourceHttpMapping,
+  dataDicts?: Record<string, DataDict>,
 ): unknown {
   if (!httpMapping.response) {
     return data;
@@ -141,7 +183,7 @@ export function getMappedResponseData(
 
   const mappedData = httpMapping.response.reduce((record, member) => ({
     ...record,
-    [member.name]: recursiveMap(data, member.mapping),
+    [member.name]: recursiveMap(data, member.mapping, dataDicts),
   }), {});
 
   return mappedData;

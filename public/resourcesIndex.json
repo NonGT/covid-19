@@ -31,13 +31,11 @@
           },
           {
             "dataKey": "nationalities",
-            "keyMembers": ["en", "th"],
-            "valueMember": "en"
+            "keyMembers": ["en", "th"]
           },
           {
             "dataKey": "provinces",
-            "keyMembers": ["en", "th", "thAbbrev"],
-            "valueMember": "en"
+            "keyMembers": ["en", "th", "thAbbrev"]
           }
         ]
       }

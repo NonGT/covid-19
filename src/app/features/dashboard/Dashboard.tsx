@@ -5,9 +5,8 @@ import { KeyMap } from '../../../core/types/common';
 import Summary from '../../../components/summary';
 import NetworkState from '../../../core/types/network';
 import { GeoJsonFeatureCollection } from '../../../core/types/geo';
-import { ResourcesIndex, RequestGeoJsonFunc, RequestResourcesIndexFunc } from '../resources/types';
-import { getDefaultCountryCode } from '../resources/utils';
-import { RequestDataSourceConfigsFunc, DataSourceConfig } from '../data/types';
+import { ResourcesIndex, RequestGeoJsonFunc } from '../resources/types';
+import { DataSourceConfig, RequestDataFunc, SummaryData } from '../data/types';
 import styles from './Dashboard.styles';
 
 interface Props extends WithStyles<typeof styles> {
@@ -18,29 +17,33 @@ interface Props extends WithStyles<typeof styles> {
   };
   resourcesIndex?: ResourcesIndex;
   geoJsons?: KeyMap<string, GeoJsonFeatureCollection>;
+  data?: {
+    summary?: SummaryData;
+  };
   dataSourceConfigs?: KeyMap<string, DataSourceConfig>;
   requestGeoJson: RequestGeoJsonFunc;
-  requestResourcesIndex: RequestResourcesIndexFunc;
-  requestDataSourceConfig: RequestDataSourceConfigsFunc;
+  requestData: RequestDataFunc;
+  countryCode?: string;
 }
 
 const Dashboard: React.FC<Props> = ({
   classes,
   resourcesIndex,
-  requestGeoJson,
   geoJsons,
+  countryCode,
+  requestGeoJson,
+  requestData,
 }: Props) => {
   useEffect(() => {
-    if (resourcesIndex) {
-      const countryCode = getDefaultCountryCode(resourcesIndex);
+    if (resourcesIndex && countryCode) {
       const { geoNodes } = resourcesIndex[countryCode] || {};
       const { url } = (geoNodes && geoNodes.root) || {};
       requestGeoJson({ key: countryCode, url });
+      requestData({ key: 'summary', params: { limit: '100' } });
     }
-  }, [resourcesIndex, requestGeoJson]);
+  }, [countryCode, resourcesIndex, requestGeoJson, requestData]);
 
-  if (resourcesIndex && geoJsons) {
-    const countryCode = getDefaultCountryCode(resourcesIndex);
+  if (resourcesIndex && countryCode && geoJsons) {
     const { features } = geoJsons[countryCode];
 
     return (

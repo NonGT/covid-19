@@ -10,7 +10,7 @@ import {
   Effect,
 } from 'redux-saga/effects';
 
-import get from '../../../core/apiService';
+import { get } from '../../../core/apiService';
 import { GeneratorEffect } from '../../../core/types/saga';
 import { GeoJsonFeatureCollection } from '../../../core/types/geo';
 import { setResourcesIndex, setGeoJson, setCountryCode } from './actions';

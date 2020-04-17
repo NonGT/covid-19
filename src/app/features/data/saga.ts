@@ -11,7 +11,7 @@ import {
   Effect,
 } from 'redux-saga/effects';
 
-import get from '../../../core/apiService';
+import { get, jsonp, performRequest } from '../../../core/apiService';
 import { GeneratorEffect } from '../../../core/types/saga';
 import { ResourcesActionConstants, SetCountryCodeAction, ResourcesIndex } from '../resources/types';
 import {
@@ -27,9 +27,9 @@ import {
   DataActionConstants,
   RequestDataSourceConfigsAction,
   RequestDataAction,
-  DataSourceHttpMapping,
   RequestDataDictsAction,
   DataDictEntryConfig,
+  DataDict,
 } from './types';
 
 import { ApplicationState } from '../../types';
@@ -72,8 +72,11 @@ function* getDataDicts(
         ...keyMemberLookup,
         [keyMember]: records[dataKey].reduce((dictLookup, item) => ({
           ...(dictLookup as object),
-          [(item as Record<string, string>)[keyMember]]:
-            (item as Record<string, string>)[valueMember],
+          [(item as Record<string, string>)[keyMember]]: (
+            valueMember
+              ? (item as Record<string, string>)[valueMember]
+              : item
+          ),
         }), {}),
       }), {}),
     }), {});
@@ -97,24 +100,45 @@ function* dataDictsFlow(): Generator<Effect | Task, void, Effect | Task> {
 
 function* getData(
   key: string,
-  url: string,
   params?: KeyMap<string, string>,
 ): GeneratorEffect<unknown, void> {
   try {
-    const httpMapping: unknown = yield select(
+    const config: unknown = yield select(
       (state: ApplicationState) => !!state.data.dataSourceConfigs
-        && state.data.dataSourceConfigs[key].httpMapping,
+        && state.data.dataSourceConfigs[key],
     );
 
-    const searchParams = params && getMappedSearchParams(
+    const dataDicts: unknown = yield select(
+      (state: ApplicationState) => !!state.data.dataDicts
+        && state.data.dataDicts,
+    );
+
+    const {
+      url,
+      method,
+      mode,
+      httpMapping,
+    } = config as DataSourceConfig;
+
+    const searchParams = getMappedSearchParams(
+      httpMapping,
       params,
-      httpMapping as DataSourceHttpMapping,
+      dataDicts as Record<string, DataDict>,
     );
 
-    const responseData: unknown = yield call(get, url, searchParams);
+    const responseData: unknown = yield call(
+      method !== 'JSONP' ? performRequest : jsonp,
+      `${url}${searchParams ? `?${searchParams.toString()}` : ''}`,
+      {
+        method,
+        mode,
+      },
+    );
+
     const data = getMappedResponseData(
       responseData,
-      httpMapping as DataSourceHttpMapping,
+      httpMapping,
+      dataDicts as Record<string, DataDict>,
     );
 
     yield put(setData({ key, data }));
@@ -126,8 +150,8 @@ function* getData(
 function* dataFlow(): Generator<Effect | Task, void, Effect | Task> {
   while (true) {
     const action: unknown = yield take(DataActionConstants.DATA_REQUEST);
-    const { key, url, params } = action as RequestDataAction;
-    const task = yield fork(getData, key, url, params);
+    const { key, params } = action as RequestDataAction;
+    const task = yield fork(getData, key, params);
 
     yield take(DataActionConstants.DATA_SET);
     yield cancel(task as Task);

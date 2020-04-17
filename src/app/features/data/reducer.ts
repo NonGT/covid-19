@@ -5,6 +5,7 @@ import {
   SetDataSourceConfigsAction,
   DataState,
   SetDataDictsAction,
+  SetDataAction,
 } from './types';
 
 export const initialState: DataState = {
@@ -13,6 +14,9 @@ export const initialState: DataState = {
       isRequesting: false,
     },
     dataDicts: {
+      isRequesting: false,
+    },
+    data: {
       isRequesting: false,
     },
   },
@@ -77,6 +81,34 @@ export default function dataReducer(
           ...(state.dataDicts && state.dataDicts),
           [act.key]: act.dataDicts,
         } : state.dataDicts,
+      };
+    }
+    case DataActionConstants.DATA_REQUEST:
+      return {
+        ...state,
+        networkStates: {
+          ...state.networkStates,
+          data: {
+            ...state.networkStates.data,
+            isRequesting: true,
+          },
+        },
+      };
+    case DataActionConstants.DATA_SET: {
+      const act = (action as SetDataAction);
+      return {
+        ...state,
+        networkStates: {
+          ...state.networkStates,
+          data: {
+            isRequesting: false,
+            lastError: act.error,
+          },
+        },
+        data: (act.key && act.data) ? {
+          ...(state.data && state.data),
+          [act.key]: act.data,
+        } : state.data,
       };
     }
     default:

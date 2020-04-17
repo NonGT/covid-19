@@ -1,14 +1,39 @@
-import { KeyMap } from './types/common';
+import fetchJsonp from 'fetch-jsonp';
 
-const defaultHeaders: KeyMap<string, string> = {
+export const defaultHeaders: Record<string, string> = {
   'Content-Type': 'application/json',
 };
+
+export async function jsonp<T extends string | number | boolean | {} | [] | void | undefined>(
+  endpoint: string,
+): Promise<T> {
+  try {
+    const response = await fetchJsonp(endpoint);
+    if (!response.ok) {
+      throw response;
+    }
+
+    return await response.json();
+  } catch (error) {
+    const refinedError = {
+      status: error.status || 0,
+      statusText: error.statusText || error.message,
+      original: error,
+    };
+
+    throw refinedError;
+  }
+}
 
 export async function performRequest<T extends string | number | boolean | {} | [] | void | undefined>(
   endpoint: string,
   requestInit: RequestInit,
 ): Promise<T> {
   try {
+    if (!requestInit.headers) {
+      requestInit.headers = defaultHeaders;
+    }
+
     const response = await fetch(endpoint, requestInit);
     if (!response.ok) {
       throw response;
@@ -27,14 +52,13 @@ export async function performRequest<T extends string | number | boolean | {} | 
   }
 }
 
-export default function get<T>(
+export function get<T>(
   endpoint: string,
   queryParams?: URLSearchParams,
   options?: RequestInit,
 ): Promise<T> {
   const requestInit: RequestInit = {
     ...options,
-    body: queryParams,
     method: 'GET',
     headers: {
       ...defaultHeaders,
@@ -42,7 +66,10 @@ export default function get<T>(
     },
   };
 
-  return performRequest<T>(endpoint, requestInit);
+  return performRequest<T>(
+    `${endpoint}${queryParams ? `?${queryParams.toString()}` : ''}`,
+    requestInit,
+  );
 }
 
 export function post<T>(

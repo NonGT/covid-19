@@ -1,6 +1,6 @@
 {
   "name": "summary",
-  "method": "GET",
+  "method": "JSONP",
   "url": "https://opendata.data.go.th/api/3/action/datastore_search",
   "httpMapping": {
     "searchParams": [
@@ -45,31 +45,64 @@
             {
               "name": "gender",
               "mapping": {
-                "path": "sex"
+                "path": "sex",
+                "converters": [{
+                  "func": "dict",
+                  "params": [
+                    "common.genders.th"
+                  ]
+                }]
               }
             },
             {
               "name": "nationality",
               "mapping": {
-                "path": "nationality"
+                "path": "nationality",
+                "converters": [{
+                  "func": "dict",
+                  "params": [
+                    "common.nationalities.th",
+                    "en"
+                  ]
+                }]
               }
             },
             {
               "name": "isolationArea",
               "mapping": {
-                "path": "Province of isolation"
+                "path": "Province of isolation",
+                "converters": [{
+                  "func": "dict",
+                  "params": [
+                    "common.provinces.th",
+                    "en"
+                  ]
+                }, {
+                  "func": "dict",
+                  "params": [
+                    "common.provinces.thAbbrev",
+                    "en"
+                  ]
+                }]
               }
             },
             {
               "name": "caseArea",
               "mapping": {
-                "path": "Province of onset"
-              }
-            },
-            {
-              "name": "caseSubArea",
-              "mapping": {
-                "path": "District of onset"
+                "path": "Province of onset",
+                "converters": [{
+                  "func": "dict",
+                  "params": [
+                    "common.provinces.th",
+                    "en"
+                  ]
+                }, {
+                  "func": "dict",
+                  "params": [
+                    "common.provinces.thAbbrev",
+                    "en"
+                  ]
+                }]
               }
             },
             {
@@ -84,7 +117,7 @@
       {
         "name": "total",
         "mapping": {
-          "path": "total",
+          "path": "result.total",
           "type": "number"
         }
       }
