@@ -15,8 +15,12 @@
     },
     "dataSources": [
       {
-        "key": "summary",
-        "url": "./datasources/tha/summary.json"
+        "key": "cases",
+        "url": "./datasources/tha/cases.json"
+      },
+      {
+        "key": "counts",
+        "url": "./datasources/tha/counts.json"
       }
     ],
     "dataDicts": [

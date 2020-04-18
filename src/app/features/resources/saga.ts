@@ -5,6 +5,7 @@ import {
   all,
   put,
   fork,
+  select,
   cancel,
   AllEffect,
   Effect,
@@ -13,14 +14,22 @@ import {
 import { get } from '../../../core/apiService';
 import { GeneratorEffect } from '../../../core/types/saga';
 import { GeoJsonFeatureCollection } from '../../../core/types/geo';
-import { setResourcesIndex, setGeoJson, setCountryCode } from './actions';
+import {
+  setResourcesIndex,
+  setGeoJson,
+  setCountryCode,
+  requestGeoJson,
+} from './actions';
+
 import {
   ResourcesActionConstants,
   ResourcesIndex,
   RequestGeoJsonAction,
   SetResourcesIndexAction,
+  SetCountryCodeAction,
 } from './types';
 import { getDefaultCountryCode } from './utils';
+import { ApplicationState } from '../../types';
 
 function* getResourcesIndex(): GeneratorEffect<ResourcesIndex, void> {
   try {
@@ -67,9 +76,33 @@ function* geoJsonFlow(): Generator<Effect | Task, void, Effect | Task> {
   }
 }
 
+function* countryCodeUpdatedFlow(): Generator<Effect | Task, void, Effect | Task> {
+  while (true) {
+    const action: unknown = yield take(ResourcesActionConstants.COUNTRY_CODE_SET);
+    const { countryCode } = action as SetCountryCodeAction;
+
+    const effect: unknown = yield select(
+      (state: ApplicationState) => state.resources.resourcesIndex,
+    );
+
+    const resourcesIndex = effect as ResourcesIndex;
+
+    const { geoNodes } = resourcesIndex[countryCode] || {};
+    const { url } = (geoNodes && geoNodes.root) || {};
+    yield put(requestGeoJson({ key: countryCode, url }));
+  }
+}
+
+function* dependencySaga(): Generator<AllEffect<unknown>, void, unknown> {
+  yield all([
+    countryCodeUpdatedFlow(),
+  ]);
+}
+
 export default function* resourcesSaga(): Generator<AllEffect<unknown>, void, unknown> {
   yield all([
     resourcesIndexFlow(),
     geoJsonFlow(),
+    dependencySaga(),
   ]);
 }

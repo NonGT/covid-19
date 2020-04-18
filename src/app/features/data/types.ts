@@ -42,8 +42,10 @@ export interface DataSourceHttpMapping {
   response?: DataMemberMapping[];
 }
 
-export interface DataDict {
-  [keyMember: string]: KeyMap<string, unknown>;
+export interface DataSourceHeaderConfig {
+  name: string;
+  value: string;
+  type: 'text' | 'env';
 }
 
 export interface DataSourceConfig {
@@ -51,7 +53,12 @@ export interface DataSourceConfig {
   method: string;
   mode?: 'cors' | 'navigate' | 'no-cors' | 'same-origin' | undefined;
   url: string;
+  httpHeaders?: DataSourceHeaderConfig[];
   httpMapping: DataSourceHttpMapping;
+}
+
+export interface DataDict {
+  [keyMember: string]: KeyMap<string, unknown>;
 }
 
 export interface DataDictEntryConfig {
@@ -85,7 +92,7 @@ export interface SetDataDictsArgs {
 
 export interface RequestDataArgs {
   key: string;
-  params?: KeyMap<string, string>;
+  params?: KeyMap<string, string | number | boolean>;
 }
 
 export interface SetDataArgs {
@@ -94,7 +101,7 @@ export interface SetDataArgs {
   error?: Error;
 }
 
-export interface SummaryData {
+export interface CasesData {
   cases: [{
     number?: number;
     age?: number;
@@ -106,6 +113,14 @@ export interface SummaryData {
     announceDate?: Date;
   }];
   total: number;
+}
+
+export interface CountsData {
+  counts: [{
+    announceDate?: Date;
+    caseArea?: string;
+    count?: number;
+  }];
 }
 
 export type RequestDataSourceConfigsAction =
@@ -136,7 +151,8 @@ export interface DataState {
   };
   dataSourceConfigs?: KeyMap<string, DataSourceConfig>;
   data?: {
-    summary?: SummaryData;
+    cases?: CasesData;
+    counts?: CountsData;
   };
   dataDicts?: KeyMap<string, DataDict>;
 }

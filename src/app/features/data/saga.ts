@@ -6,7 +6,6 @@ import {
   all,
   put,
   fork,
-  cancel,
   AllEffect,
   Effect,
 } from 'redux-saga/effects';
@@ -20,6 +19,7 @@ import {
   setData,
   setDataDicts,
   requestDataDicts,
+  requestData,
 } from './actions';
 
 import {
@@ -34,7 +34,7 @@ import {
 
 import { ApplicationState } from '../../types';
 import { KeyMap } from '../../../core/types/common';
-import { getMappedSearchParams, getMappedResponseData } from './utils';
+import { getMappedSearchParams, getMappedResponseData, getHttpHeaders } from './utils';
 
 function* getDataSourceConfig(key: string, url: string): GeneratorEffect<DataSourceConfig, void> {
   try {
@@ -49,10 +49,7 @@ function* dataSourceConfigFlow(): Generator<Effect | Task, void, Effect | Task> 
   while (true) {
     const action: unknown = yield take(DataActionConstants.DATA_SOURCE_CONFIGS_REQUEST);
     const { key, url } = action as RequestDataSourceConfigsAction;
-    const task = yield fork(getDataSourceConfig, key, url);
-
-    yield take(DataActionConstants.DATA_SOURCE_CONFIGS_SET);
-    yield cancel(task as Task);
+    yield fork(getDataSourceConfig, key, url);
   }
 }
 
@@ -91,16 +88,13 @@ function* dataDictsFlow(): Generator<Effect | Task, void, Effect | Task> {
   while (true) {
     const action: unknown = yield take(DataActionConstants.DATA_DICTS_REQUEST);
     const { key, url, entries } = action as RequestDataDictsAction;
-    const task = yield fork(getDataDicts, key, url, entries);
-
-    yield take(DataActionConstants.DATA_DICTS_SET);
-    yield cancel(task as Task);
+    yield fork(getDataDicts, key, url, entries);
   }
 }
 
 function* getData(
   key: string,
-  params?: KeyMap<string, string>,
+  params?: KeyMap<string, string | number | boolean>,
 ): GeneratorEffect<unknown, void> {
   try {
     const config: unknown = yield select(
@@ -118,6 +112,7 @@ function* getData(
       method,
       mode,
       httpMapping,
+      httpHeaders,
     } = config as DataSourceConfig;
 
     const searchParams = getMappedSearchParams(
@@ -126,12 +121,14 @@ function* getData(
       dataDicts as Record<string, DataDict>,
     );
 
+    const headers = httpHeaders ? getHttpHeaders(httpHeaders) : undefined;
     const responseData: unknown = yield call(
       method !== 'JSONP' ? performRequest : jsonp,
       `${url}${searchParams ? `?${searchParams.toString()}` : ''}`,
       {
         method,
         mode,
+        headers,
       },
     );
 
@@ -151,10 +148,7 @@ function* dataFlow(): Generator<Effect | Task, void, Effect | Task> {
   while (true) {
     const action: unknown = yield take(DataActionConstants.DATA_REQUEST);
     const { key, params } = action as RequestDataAction;
-    const task = yield fork(getData, key, params);
-
-    yield take(DataActionConstants.DATA_SET);
-    yield cancel(task as Task);
+    yield fork(getData, key, params);
   }
 }
 
@@ -170,21 +164,24 @@ function* countryCodeUpdatedFlow(): Generator<Effect | Task, void, Effect | Task
     const resourcesIndex = effectResult as ResourcesIndex;
     const { dataSources, dataDicts } = resourcesIndex[countryCode] || {};
 
-    yield all(
-      dataSources.map(
-        ({ key, url }) => put(requestDataSourceConfig({ key, url })),
-      ),
-    );
+    for (let index = 0; index < dataSources.length; index += 1) {
+      const { key, url } = dataSources[index];
+      yield put(requestDataSourceConfig({ key, url }));
+      yield take(DataActionConstants.DATA_SOURCE_CONFIGS_SET);
+    }
 
-    yield all(
-      dataDicts.map(
-        ({ key, url, entries }) => put(requestDataDicts({ key, url, entries })),
-      ),
-    );
+    for (let index = 0; index < dataDicts.length; index += 1) {
+      const { key, url, entries } = dataDicts[index];
+      yield put(requestDataDicts({ key, url, entries }));
+      yield take(DataActionConstants.DATA_DICTS_SET);
+    }
+
+    yield put(requestData({ key: 'counts' }));
+    yield put(requestData({ key: 'cases', params: { limit: 1000 } }));
   }
 }
 
-function* resourcesDependencySaga(): Generator<AllEffect<unknown>, void, unknown> {
+function* dependencySaga(): Generator<AllEffect<unknown>, void, unknown> {
   yield all([
     countryCodeUpdatedFlow(),
   ]);
@@ -192,7 +189,7 @@ function* resourcesDependencySaga(): Generator<AllEffect<unknown>, void, unknown
 
 export default function* dataSaga(): Generator<AllEffect<unknown>, void, unknown> {
   yield all([
-    resourcesDependencySaga(),
+    dependencySaga(),
     dataSourceConfigFlow(),
     dataDictsFlow(),
     dataFlow(),

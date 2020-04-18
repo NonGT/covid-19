@@ -1,5 +1,5 @@
 {
-  "name": "summary",
+  "name": "cases",
   "method": "JSONP",
   "url": "https://opendata.data.go.th/api/3/action/datastore_search",
   "httpMapping": {
@@ -23,7 +23,7 @@
     ],
     "response": [
       {
-        "name": "cases",
+        "name": "items",
         "mapping": {
           "path": "result.records",
           "type": "array",

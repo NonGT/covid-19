@@ -1,12 +1,17 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { withStyles, WithStyles, Box } from '@material-ui/core';
 
 import { KeyMap } from '../../../core/types/common';
-import Summary from '../../../components/summary';
+import SummaryMap from '../../../components/summaryMap';
 import NetworkState from '../../../core/types/network';
 import { GeoJsonFeatureCollection } from '../../../core/types/geo';
 import { ResourcesIndex, RequestGeoJsonFunc } from '../resources/types';
-import { DataSourceConfig, RequestDataFunc, SummaryData } from '../data/types';
+import {
+  DataSourceConfig,
+  RequestDataFunc,
+  CasesData,
+  CountsData,
+} from '../data/types';
 import styles from './Dashboard.styles';
 
 interface Props extends WithStyles<typeof styles> {
@@ -18,7 +23,8 @@ interface Props extends WithStyles<typeof styles> {
   resourcesIndex?: ResourcesIndex;
   geoJsons?: KeyMap<string, GeoJsonFeatureCollection>;
   data?: {
-    summary?: SummaryData;
+    cases?: CasesData;
+    counts?: CountsData;
   };
   dataSourceConfigs?: KeyMap<string, DataSourceConfig>;
   requestGeoJson: RequestGeoJsonFunc;
@@ -31,29 +37,21 @@ const Dashboard: React.FC<Props> = ({
   resourcesIndex,
   geoJsons,
   countryCode,
-  requestGeoJson,
-  requestData,
+  data,
 }: Props) => {
-  useEffect(() => {
-    if (resourcesIndex && countryCode) {
-      const { geoNodes } = resourcesIndex[countryCode] || {};
-      const { url } = (geoNodes && geoNodes.root) || {};
-      requestGeoJson({ key: countryCode, url });
-      requestData({ key: 'summary', params: { limit: '100' } });
-    }
-  }, [countryCode, resourcesIndex, requestGeoJson, requestData]);
-
-  if (resourcesIndex && countryCode && geoJsons) {
+  if (resourcesIndex && countryCode && geoJsons && data) {
     const { features } = geoJsons[countryCode];
 
     return (
       <Box className={classes.root}>
-        <Summary
+        <SummaryMap
           classes={{
             root: classes.summaryView,
           }}
           countryCode={countryCode}
           areaFeatures={features}
+          counts={data.counts}
+          cases={data.cases}
         />
       </Box>
     );

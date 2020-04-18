@@ -6,6 +6,7 @@ import {
   DataConverterFunctionDef,
   DataMapping,
   DataDict,
+  DataSourceHeaderConfig,
 } from './types';
 
 import * as converterFuncs from './converters';
@@ -112,7 +113,7 @@ function recursiveMap(
 
 export function mapSearchValue(
   mapping: SearchParamMapping,
-  params?: KeyMap<string, string>,
+  params?: KeyMap<string, string | number | boolean>,
   dataDicts?: Record<string, DataDict>,
 ): string | undefined {
   if (!mapping.sources) {
@@ -151,11 +152,19 @@ export function mapSearchValue(
 
 export function getMappedSearchParams(
   httpMapping: DataSourceHttpMapping,
-  params?: KeyMap<string, string>,
+  params?: KeyMap<string, string | number | boolean>,
   dataDicts?: Record<string, DataDict>,
 ): URLSearchParams {
   if (!httpMapping.searchParams) {
-    return new URLSearchParams(params);
+    if (!params) {
+      return new URLSearchParams();
+    }
+
+    const refinedParams = Object.keys(params || {}).reduce((urlSearch, key) => ({
+      ...urlSearch,
+      [key]: String(params[key]),
+    }), {} as URLSearchParams);
+    return new URLSearchParams(refinedParams);
   }
 
   const searchParams = httpMapping.searchParams
@@ -187,4 +196,15 @@ export function getMappedResponseData(
   }), {});
 
   return mappedData;
+}
+
+export function getHttpHeaders(
+  httpHeaders: DataSourceHeaderConfig[],
+): Record<string, string> {
+  return httpHeaders.reduce((headers, config) => ({
+    ...headers,
+    [config.name]: config.type === 'env'
+      ? process.env[`REACT_APP_${config.value}`]
+      : config.value,
+  }), {});
 }

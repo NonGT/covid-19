@@ -12,17 +12,20 @@ import {
 
 import * as turf from '@turf/turf';
 
-import styles from './Summary.styles';
+import styles from './SummaryMap.styles';
 import MapView, { CameraParams } from '../map/MapView';
 import { GeoJsonFeature, GeoCoordinates } from '../../core/types/geo';
 import {
   createPolygonFeature,
   extractCoordinates,
 } from '../../core/utils/mapUtils';
+import { CasesData, CountsData } from '../../app/features/data/types';
 
 interface Props extends WithStyles<typeof styles> {
   countryCode: string;
   areaFeatures?: GeoJsonFeature[];
+  counts?: CountsData;
+  cases?: CasesData;
 }
 
 function getCenter(areaFeatures: GeoJsonFeature[]): GeoCoordinates {
@@ -43,7 +46,7 @@ function getCenter(areaFeatures: GeoJsonFeature[]): GeoCoordinates {
   };
 }
 
-const Summary: React.FC<Props> = ({ classes, areaFeatures }: Props) => {
+const SummaryMap: React.FC<Props> = ({ classes, areaFeatures }: Props) => {
   const currentCamera: CameraParams = {
     center: {
       latitude: 11.8700,
@@ -74,4 +77,4 @@ const Summary: React.FC<Props> = ({ classes, areaFeatures }: Props) => {
   );
 };
 
-export default withStyles(styles, { withTheme: true })(Summary);
+export default withStyles(styles, { withTheme: true })(SummaryMap);
