@@ -1,3 +1,5 @@
+import * as turf from '@turf/turf';
+
 import {
   MapViewFeature,
   MapViewPolygonFeature,
@@ -6,8 +8,10 @@ import {
 
 import { GeoJsonFeature } from '../types/geo';
 
-export function createPolygonFeature(feature: GeoJsonFeature): MapViewFeature | undefined {
-  const { type, coordinates } = feature.geometry;
+export function createPolygonFeature(
+  feature: GeoJsonFeature,
+): MapViewFeature | undefined {
+  const { type, coordinates } = turf.simplify(feature.geometry, { tolerance: 0.03 });
 
   if (type === 'Polygon') {
     return new MapViewPolygonFeature(coordinates, feature.properties);

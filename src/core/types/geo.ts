@@ -8,10 +8,7 @@ export interface GeoJsonFeature {
     type: string;
     coordinates: [];
   };
-
-  properties: {
-    province: string;
-  };
+  properties: Record<string, unknown>;
 }
 
 export interface GeoJsonFeatureCollection {

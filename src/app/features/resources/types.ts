@@ -15,6 +15,7 @@ export enum ResourcesActionConstants {
 export interface GeoJsonResourceNode {
   [key: string]: {
     url: string;
+    keyProperty?: string;
     geoNodes?: GeoJsonResourceNode;
   };
 }

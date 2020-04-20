@@ -102,7 +102,7 @@ export interface SetDataArgs {
 }
 
 export interface CasesData {
-  cases: [{
+  items: [{
     number?: number;
     age?: number;
     gender?: 'male' | 'female';
@@ -116,7 +116,7 @@ export interface CasesData {
 }
 
 export interface CountsData {
-  counts: [{
+  items: [{
     announceDate?: Date;
     caseArea?: string;
     count?: number;

@@ -30,6 +30,7 @@ interface Props extends WithStyles<typeof styles> {
   requestGeoJson: RequestGeoJsonFunc;
   requestData: RequestDataFunc;
   countryCode?: string;
+  areaCode?: string;
 }
 
 const Dashboard: React.FC<Props> = ({
@@ -37,10 +38,13 @@ const Dashboard: React.FC<Props> = ({
   resourcesIndex,
   geoJsons,
   countryCode,
+  areaCode,
   data,
 }: Props) => {
   if (resourcesIndex && countryCode && geoJsons && data) {
     const { features } = geoJsons[countryCode];
+    const areaFeatureProperty = resourcesIndex[countryCode]
+      .geoNodes[areaCode || 'root'].keyProperty;
 
     return (
       <Box className={classes.root}>
@@ -49,6 +53,7 @@ const Dashboard: React.FC<Props> = ({
             root: classes.summaryView,
           }}
           countryCode={countryCode}
+          areaFeatureProperty={areaFeatureProperty}
           areaFeatures={features}
           counts={data.counts}
           cases={data.cases}

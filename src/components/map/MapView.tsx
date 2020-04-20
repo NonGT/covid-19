@@ -3,6 +3,7 @@ import React, {
   useEffect,
   useState,
   memo,
+  MutableRefObject,
 } from 'react';
 
 import {
@@ -10,10 +11,12 @@ import {
   WithStyles,
 } from '@material-ui/core';
 
+import * as uuid from 'uuid';
+
 import { MapView as HarpMapView, MapViewEventNames, DataSource } from '@here/harp-mapview';
 import { GeoCoordinates as HarpGeoCoordinates, sphereProjection } from '@here/harp-geoutils';
 import { OmvDataSource, APIFormat, AuthenticationMethod } from '@here/harp-omv-datasource';
-import { FeaturesDataSource } from '@here/harp-features-datasource';
+import { FeaturesDataSource, MapViewFeature } from '@here/harp-features-datasource';
 
 import styles from './MapView.styles';
 import { GeoCoordinates } from '../../core/types/geo';
@@ -26,12 +29,18 @@ export interface CameraParams {
   tilt?: number;
 }
 
+export interface MapViewFeatureSet {
+  name: string;
+  styleSet: string;
+  features: MapViewFeature[];
+}
+
 interface Props extends WithStyles<typeof styles> {
   camera: CameraParams;
   themeUrl?: string;
   tileDataUrl?: string;
   styleSetName?: string;
-  features?: FeaturesDataSource[];
+  features?: MapViewFeatureSet[];
 }
 
 const DEFAULT_CAMERA_DISTANCE = 2700000;
@@ -94,6 +103,69 @@ function updateMapViewCamera(mapView: HarpMapView, params: CameraParams): void {
   mapView.update();
 }
 
+function updateFeatureDataSource(
+  mapView: HarpMapView,
+  currentFeatureSets: MapViewFeatureSet[],
+  newFeatureSets: MapViewFeatureSet[],
+  dataSourceLookupRef: MutableRefObject<Record<string, FeaturesDataSource>>,
+): FeaturesDataSource[] {
+  const dsLookup = dataSourceLookupRef.current;
+  const existingSetLookup = currentFeatureSets.reduce((lookup, fs) => ({
+    ...lookup,
+    [fs.name]: fs,
+  }), {} as Record<string, MapViewFeatureSet>);
+
+  const dataSourceToBeRemoved: FeaturesDataSource[] = [];
+
+  newFeatureSets.forEach((fs) => {
+    const ds = dataSourceLookupRef.current[fs.name];
+    const featuresDataSource = ds
+      ? (ds as unknown as FeaturesDataSource)
+      : new FeaturesDataSource({
+        name: fs.name,
+        styleSetName: fs.styleSet,
+      });
+
+    if (!ds) {
+      mapView.addDataSource(featuresDataSource as unknown as DataSource);
+      dsLookup[fs.name] = featuresDataSource;
+    }
+
+    // We do not update all features, only the feature data that has been updated.
+    // So we will remove/add only the one that the properties has been changed.
+    const existingFs = existingSetLookup[fs.name];
+    const existingFeatureLookup = existingFs && existingFs.features.reduce((lookup, feature) => ({
+      ...lookup,
+      [feature.uuid]: feature,
+    }), {} as Record<string, MapViewFeature>);
+
+    fs.features.forEach((feature) => {
+      const existingFeature = existingFeatureLookup && existingFeatureLookup[feature.uuid];
+      if (!existingFeature) {
+        featuresDataSource?.add(feature);
+        return;
+      }
+
+      if (JSON.stringify(existingFeature) !== JSON.stringify(feature)) {
+        const newFeaturesDataSource = new FeaturesDataSource({
+          name: uuid.v4(),
+          styleSetName: fs.styleSet,
+        });
+
+        newFeaturesDataSource.add(feature);
+        mapView.addDataSource(newFeaturesDataSource as unknown as DataSource);
+        dsLookup[fs.name] = newFeaturesDataSource;
+
+        dataSourceToBeRemoved.push(featuresDataSource);
+      }
+    });
+
+    mapView.update();
+  });
+
+  return dataSourceToBeRemoved;
+}
+
 const MapView: React.FC<Props> = ({
   classes,
   camera,
@@ -103,14 +175,12 @@ const MapView: React.FC<Props> = ({
   features,
 }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  const [
-    currentFeatures,
-    setCurrentFeatures,
-  ] = useState<FeaturesDataSource[]>();
-
   const [currentMapView, setCurrentMapView] = useState<HarpMapView>();
   const { center } = camera;
+
+  const currentFeaturesRef = useRef([] as MapViewFeatureSet[]);
+  const dataSourceLookupRef = useRef({} as Record<string, FeaturesDataSource>);
+  const dataSourceToBeRemoved = useRef([] as FeaturesDataSource[]);
 
   const coordinates = new HarpGeoCoordinates(
     center.latitude,
@@ -152,24 +222,29 @@ const MapView: React.FC<Props> = ({
       updateMapViewCamera(currentMapView, camera);
     };
 
-    if (currentFeatures) {
-      currentFeatures.forEach((feature) => {
-        // currentMapView.removeDataSource((feature as unknown) as DataSource);
-      });
-    }
+    dataSourceToBeRemoved.current.forEach((ds) => {
+      ds.clear();
+      ds.clearCache();
+      ds.dispose();
+      currentMapView.removeDataSource(ds as unknown as DataSource);
+    });
 
-    if (features && !currentFeatures) {
-      setCurrentFeatures(features);
-      features.forEach((feature) => {
-        currentMapView.addDataSource((feature as unknown) as DataSource);
-      });
+    if (features && features !== currentFeaturesRef.current) {
+      dataSourceToBeRemoved.current = updateFeatureDataSource(
+        currentMapView,
+        currentFeaturesRef.current,
+        features,
+        dataSourceLookupRef,
+      );
+
+      currentFeaturesRef.current = features;
     }
 
     currentMapView.addEventListener(MapViewEventNames.AfterRender, onAfterRender);
     return (): void => {
       currentMapView.removeEventListener(MapViewEventNames.AfterRender, onAfterRender);
     };
-  }, [currentMapView, camera, features, currentFeatures]);
+  }, [currentMapView, camera, features]);
 
   return (
     <canvas className={classes.root} ref={canvasRef} />

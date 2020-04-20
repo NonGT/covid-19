@@ -1,6 +1,6 @@
 const defaultMapTheme = '/mapTheme.json';
 const defaultTileDataSource = 'https://vector.hereapi.com/v2/vectortiles/base/mc';
-const defaultStyleSet = 'tilezen';
+const defaultStyleSet = 'earth';
 const defaultAuthParamName = 'apikey';
 
 export const map = {

@@ -3,6 +3,7 @@
     "geoNodes": {
       "root": {
         "url": "./geojson/tha.geojson",
+        "keyProperty": "province",
         "geoNodes": {
           "bangkok": {
             "url": "./geojson/level0/tha/bangkok.geojson"
