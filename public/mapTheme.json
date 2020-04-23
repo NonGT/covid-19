@@ -1,0 +1,265 @@
+{
+  "sky": {
+	  "type": "gradient",
+	  "topColor": "#161719",
+	  "bottomColor": "#262829",
+	  "groundColor": "#262829",
+	  "monomialPower": 1
+  },
+  "fog": {
+	  "color": "#262829",
+	  "startRatio": 0.8
+  },
+  "clearColor": "#4A4D4E",
+  "lights": [
+	  {
+		  "type": "ambient",
+		  "color": "#C9CACC",
+		  "name": "ambientLight",
+		  "intensity": 0.8
+	  },
+	  {
+		  "type": "directional",
+		  "color": "#C5C7CA",
+		  "name": "light1",
+		  "intensity": 0.4,
+		  "direction": {
+			  "x": 1,
+			  "y": 0,
+			  "z": 1
+		  }
+	  },
+	  {
+		  "type": "directional",
+		  "color": "#B6B6B6",
+		  "name": "light2",
+		  "intensity": 0.4,
+		  "direction": {
+			  "x": -1,
+			  "y": 0,
+			  "z": 1
+		  }
+	  }
+  ],
+  "defaultTextStyle": {
+	  "name": "defaultTextStyle",
+	  "color": "#090A0A",
+	  "fontCatalogName": "fira"
+  },
+  "textStyles": [
+	  {
+		  "name": "smallSign",
+		  "color": "#000000",
+		  "fontCatalogName": "fira"
+	  },
+	  {
+		  "name": "smallSignLight",
+		  "color": "#202121",
+		  "fontCatalogName": "fira"
+	  },
+	  {
+		  "name": "placeMarker",
+		  "color": "#202121",
+		  "fontCatalogName": "fira"
+	  }
+  ],
+  "fontCatalogs": [
+	  {
+		  "name": "fira",
+		  "url": "/fonts/mapFonts.json"
+	  }
+  ],
+  "styles": {
+	  "earth": [
+		  {
+			  "description": "water",
+			  "when": [
+				  "all",
+				  ["==", ["get", "$layer"], "water"],
+				  ["==", ["get", "$geometryType"], "polygon"]
+			  ],
+			  "technique": "fill",
+			  "attr": {
+				  "color": "#3A3C3E"
+			  },
+			  "renderOrder": 5
+		  },
+		  {
+			  "description": "park",
+			  "when": [
+				  "all",
+				  ["==", ["get", "$layer"], "landuse"],
+				  ["==", ["get", "$geometryType"], "polygon"],
+				  [
+					  "in",
+					  ["get", "kind"],
+					  [
+						  "nature",
+						  "forest",
+						  "park",
+						  "wood",
+						  "natural_wood",
+						  "grass",
+						  "meadow",
+						  "village_green",
+						  "dog_park",
+						  "garden",
+						  "nature_reserve",
+						  "protected_area"
+					  ]
+				  ]
+			  ],
+			  "technique": "fill",
+			  "attr": {
+				  "color": "#474A4B"
+			  },
+			  "renderOrder": 0.2
+		  }
+    ],
+    "caseCharts": [
+		  {
+        "description": "all",
+        "when": "$geometryType == 'polygon' && !count",
+			  "technique": "extruded-polygon",
+			  "attr": {
+				  "color": "#00ff00",
+				  "transparent": true,
+          "opacity": 0.8,
+          "boundaryWalls": false,
+				  "constantHeight": true,
+          "lineWidth": 1,
+          "lineColor": "#003344",
+          "emissive": "#0000ff",
+				  "emissiveIntensity": 0.2
+        },
+			  "renderOrder": 1000
+		  },
+		  {
+			  "description": "cases > 0 && cases < 10 chart",
+			  "when": "$geometryType == 'polygon' && count > 0 && count < 10",
+			  "technique": "extruded-polygon",
+			  "attr": {
+				  "color": "#ffaa00",
+				  "transparent": true,
+          "opacity": 0.8,
+          "boundaryWalls": false,
+				  "constantHeight": true,
+          "lineWidth": {
+              "interpolation": "Discrete",
+              "zoomLevels": [10, 11, 12],
+              "values": [1.0, 1.0, 1.0]
+          },
+          "lineColor": "#003344",
+          "emissive": "#0000ff",
+				  "emissiveIntensity": 0.2
+        },
+			  "renderOrder": 1000
+      },
+		  {
+			  "description": "cases >= 10 && cases < 20 chart",
+			  "when": "$geometryType == 'polygon' && count >= 10 && count < 20",
+			  "technique": "extruded-polygon",
+			  "attr": {
+				  "color": "#ff8800",
+				  "transparent": true,
+          "opacity": 0.8,
+          "boundaryWalls": false,
+				  "constantHeight": true,
+          "lineWidth": {
+              "interpolation": "Discrete",
+              "zoomLevels": [10, 11, 12],
+              "values": [1.0, 1.0, 1.0]
+          },
+          "lineColor": "#003344",
+          "emissive": "#0000ff",
+				  "emissiveIntensity": 0.2
+        },
+			  "renderOrder": 1000
+      },
+		  {
+			  "description": "cases >= 20 && cases < 50 chart",
+			  "when": "$geometryType == 'polygon' && count >= 20 && count < 50",
+			  "technique": "extruded-polygon",
+			  "attr": {
+				  "color": "#ff5500",
+				  "transparent": true,
+          "opacity": 0.8,
+          "boundaryWalls": false,
+				  "constantHeight": true,
+          "lineWidth": {
+              "interpolation": "Discrete",
+              "zoomLevels": [10, 11, 12],
+              "values": [1.0, 1.0, 1.0]
+          },
+          "lineColor": "#003344",
+          "emissive": "#0000ff",
+				  "emissiveIntensity": 0.2
+        },
+			  "renderOrder": 1000
+      },
+		  {
+			  "description": "cases >= 50 && cases < 100 chart",
+			  "when": "$geometryType == 'polygon' && count >= 50 && count < 100",
+			  "technique": "extruded-polygon",
+			  "attr": {
+				  "color": "#ff3300",
+				  "transparent": true,
+          "opacity": 0.8,
+          "boundaryWalls": false,
+				  "constantHeight": true,
+          "lineWidth": {
+              "interpolation": "Discrete",
+              "zoomLevels": [10, 11, 12],
+              "values": [1.0, 1.0, 1.0]
+          },
+          "lineColor": "#003344",
+          "emissive": "#0000ff",
+				  "emissiveIntensity": 0.2
+        },
+			  "renderOrder": 1000
+      },
+		  {
+			  "description": "cases >= 100 chart && count < 500",
+			  "when": "$geometryType == 'polygon' && count >= 100 && count < 500",
+			  "technique": "extruded-polygon",
+			  "attr": {
+				  "color": "#ff1100",
+				  "transparent": true,
+          "opacity": 0.8,
+          "boundaryWalls": false,
+				  "constantHeight": true,
+          "lineWidth": {
+              "interpolation": "Discrete",
+              "zoomLevels": [10, 11, 12],
+              "values": [1.0, 1.0, 1.0]
+          },
+          "lineColor": "#003344",
+          "emissive": "#0000ff",
+				  "emissiveIntensity": 0.2
+        },
+			  "renderOrder": 1000
+      },
+		  {
+			  "description": "cases >= 500 chart",
+			  "when": "$geometryType == 'polygon' && count >= 500",
+			  "technique": "extruded-polygon",
+			  "attr": {
+				  "color": "#ff0000",
+				  "transparent": true,
+          "opacity": 0.8,
+          "boundaryWalls": false,
+				  "constantHeight": true,
+          "lineWidth": {
+              "interpolation": "Discrete",
+              "zoomLevels": [10, 11, 12],
+              "values": [1.0, 1.0, 1.0]
+          },
+          "lineColor": "#003344",
+          "emissive": "#0000ff",
+				  "emissiveIntensity": 0.2
+        },
+			  "renderOrder": 1000
+		  }
+    ]
+  }
+}

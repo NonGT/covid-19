@@ -1,0 +1,49 @@
+{
+  "TH": {
+    "geoNodes": {
+      "root": {
+        "url": "./geojson/tha.geojson",
+        "keyProperty": "province",
+        "geoNodes": {
+          "bangkok": {
+            "url": "./geojson/level0/tha/bangkok.geojson"
+          },
+          "nonthaburi": {
+            "url": "./geojson/level0/tha/nonthaburi.geojson"
+          }
+        }
+      }
+    },
+    "dataSources": [
+      {
+        "key": "cases",
+        "url": "./datasources/tha/cases.json"
+      },
+      {
+        "key": "counts",
+        "url": "./datasources/tha/counts.json"
+      }
+    ],
+    "dataDicts": [
+      {
+        "key": "common",
+        "url": "./datasources/tha/dicts/common.json",
+        "entries": [
+          {
+            "dataKey": "genders",
+            "keyMembers": ["en", "th"],
+            "valueMember": "en"
+          },
+          {
+            "dataKey": "nationalities",
+            "keyMembers": ["en", "th"]
+          },
+          {
+            "dataKey": "provinces",
+            "keyMembers": ["en", "th", "thAbbrev"]
+          }
+        ]
+      }
+    ]
+  }
+}

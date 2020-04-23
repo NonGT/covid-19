@@ -1,0 +1,56 @@
+{
+  "name": "counts",
+  "method": "JSONP",
+  "url": "https://opendata.data.go.th/api/3/action/datastore_search_sql",
+  "httpMapping": {
+    "searchParams": [
+      {
+        "target": "sql",
+        "default": "SELECT \"Announce Date\", \"Province of onset\", count(no) from \"93f74e67-6f76-4b25-8f5d-b485083100b6\" group by \"Province of onset\", \"Announce Date\" order by \"Announce Date\""
+      }
+    ],
+    "response": [
+      {
+        "name": "items",
+        "mapping": {
+          "path": "result.records",
+          "type": "array",
+          "members": [
+            {
+              "name": "announceDate",
+              "mapping": {
+                "path": "Announce Date"
+              }
+            },
+            {
+              "name": "caseArea",
+              "mapping": {
+                "path": "Province of onset",
+                "converters": [{
+                  "func": "dict",
+                  "params": [
+                    "common.provinces.th",
+                    "en"
+                  ]
+                }, {
+                  "func": "dict",
+                  "params": [
+                    "common.provinces.thAbbrev",
+                    "en"
+                  ]
+                }]
+              }
+            },
+            {
+              "name": "count",
+              "mapping": {
+                "path": "count",
+                "type": "number"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

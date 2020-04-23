@@ -1,0 +1,31 @@
+:export {
+  primary50: #e4e4e6;
+  primary100: #bbbdbf;
+  primary200: #8e9195;
+  primary300: #60646b;
+  primary400: #3e434b;
+  primary500: #1c222b;
+  primary600: #191e26;
+  primary700: #141920;
+  primary800: #11141a;
+  primary900: #090c10;
+  primaryA100: #557fff;
+  primaryA200: #2259ff;
+  primaryA400: #003bee;
+  primaryA700: #0035d4;
+
+  secondary50: #fcedef;
+  secondary100: #f6d2d6;
+  secondary200: #f1b5bb;
+  secondary300: #eb979f;
+  secondary400: #e6808b;
+  secondary500: #e26a76;
+  secondary600: #df626e;
+  secondary700: #da5763;
+  secondary800: #d64d59;
+  secondary900: #cf3c46;
+  secondaryA100: #ffffff;
+  secondaryA200: #ffe9ea;
+  secondaryA400: #ffb6bb;
+  secondaryA700: #ff9ca3;
+}
